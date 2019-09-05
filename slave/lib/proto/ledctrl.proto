@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package ledctrl;
+
+service ServiceName {
+
+   rpc Clear (ClearRequest) returns (EmptyResponse);
+   rpc DisplayImage (DisplayImageRequest) returns (EmptyResponse);
+}
+
+message Color {
+   int32 rgba = 1; // one byte per channel
+}
+
+message EmptyResponse{}
+
+message ClearRequest {
+   Color color = 1;
+}
+
+message DisplayImageRequest {
+   repeated Color pixels = 1;
+}

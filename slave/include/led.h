@@ -4,7 +4,7 @@
 #define LED_PIN         19
 #define COLOR_ORDER     GRB
 #define CHIPSET         WS2812B
-#define BRIGHTNESS      8
+#define BRIGHTNESS      2
 
 // Used by LEDMatrix
 #define MATRIX_TILE_WIDTH   32 // width of EACH NEOPIXEL MATRIX (not total display)

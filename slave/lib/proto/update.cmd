@@ -1,0 +1,1 @@
+@C:\tools\nanopb\generator-bin\protoc --nanopb_out=src ledctrl.proto
