@@ -27,11 +27,11 @@ void setup_wifi()
    Server.on("/", rootPage);
    if (Portal.begin())
    {
-      Serial.println("Web server started: " + WiFi.localIP().toString());
+      Serial.println("[WIFI] Web server started: " + WiFi.localIP().toString());
    }
    else
    {
-      Serial.println("Failed to start server");
+      Serial.println("[WIFI] Failed to start server");
    }
 }
 

@@ -9,17 +9,17 @@
 
 void setup_mdns()
 {
+   //initialize mDNS service
+   esp_err_t err = mdns_init();
+   if (err)
+   {
+      printf("[MDNS] Init failed: %d\n", err);
+      return;
+   }
 
-    //initialize mDNS service
-    esp_err_t err = mdns_init();
-    if (err) {
-        printf("MDNS Init failed: %d\n", err);
-        return;
-    }
-
-    //set hostname
-    mdns_hostname_set(BONJOUR_NAME);
-    mdns_instance_name_set("led-slave driver");
+   //set hostname
+   mdns_hostname_set(BONJOUR_NAME);
+   mdns_instance_name_set("led-slave driver");
 
    mdns_service_add(NULL, "_http", "_tcp", 80, NULL, 0);
    mdns_service_add(NULL, "_ledwall", "_tcp", CTRL_PORT, NULL, 0);

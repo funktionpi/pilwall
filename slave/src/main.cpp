@@ -7,16 +7,21 @@
 #include "ledslave.h"
 #include "led.h"
 
+#define DEBUG
+
 void setup()
 {
+#ifdef DEBUG
    Serial.begin(115200);
-   Serial.println("Starting esp32 setup");
+#endif
+   Serial.println("[MAIN] Starting esp32 setup");
 
    setup_wifi();
    led_setup();
    setup_mdns();
+   setup_server();
 
-   Serial.println("Setup done");
+   Serial.println("[MAIN] Setup done");
 }
 
 void loop()

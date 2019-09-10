@@ -1,10 +1,12 @@
 #ifndef _LED_H_
 #define _LED_H_
 
+#include <Arduino.h>
+
 #define LED_PIN         19
 #define COLOR_ORDER     GRB
 #define CHIPSET         WS2812B
-#define BRIGHTNESS      2
+#define BRIGHTNESS      2 // 0 to 255
 
 // Used by LEDMatrix
 #define MATRIX_TILE_WIDTH   32 // width of EACH NEOPIXEL MATRIX (not total display)
@@ -64,5 +66,8 @@ void display_lines();
 void display_boxes();
 void led_setup();
 void led_loop();
+
+void led_set_brightness(int brigth);
+void led_clear(uint32_t col);
 
 #endif
