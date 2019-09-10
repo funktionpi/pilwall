@@ -1,4 +1,0 @@
-package slave
-
-
-//go:generate

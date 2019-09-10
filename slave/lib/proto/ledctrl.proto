@@ -1,23 +1,33 @@
 syntax = "proto3";
 
+import "nanopb.proto";
+
 package ledctrl;
+option go_package = "slave";
 
-service ServiceName {
 
-   rpc Clear (ClearRequest) returns (EmptyResponse);
-   rpc DisplayImage (DisplayImageRequest) returns (EmptyResponse);
-}
-
-message Color {
-   int32 rgba = 1; // one byte per channel
+message Request {
+   oneof request {
+      ClearRequest clear_request = 1;
+      DisplayImageRequest display_image_request = 2;
+      BrightnessRequest brightness_request = 3;
+   }
 }
 
 message EmptyResponse{}
 
+/*
+   Color is int32 (r-g-b-a).
+*/
+
 message ClearRequest {
-   Color color = 1;
+   uint32 color = 1;
 }
 
 message DisplayImageRequest {
-   repeated Color pixels = 1;
+   repeated uint32 pixels = 1 [(nanopb).max_count = 512];
+}
+
+message BrightnessRequest {
+   int32 brightness = 1;
 }

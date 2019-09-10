@@ -23,9 +23,9 @@ void led_setup()
    FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, ledmatrix.Size()).setCorrection(TypicalSMD5050);
    FastLED.setBrightness(BRIGHTNESS);
 
-   Serial.print("Matrix Size: ");
+   Serial.print("[LED] Matrix Size: ");
    Serial.print(MATRIX_WIDTH);
-   Serial.print(" ");
+   Serial.print("x");
    Serial.println(MATRIX_HEIGHT);
 
    delay(200);
@@ -42,6 +42,15 @@ void matrix_clear()
    // FastLED.clear();
 }
 
+void led_set_brightness(int brigth) {
+   matrix->setBrightness(brigth);
+}
+
+void led_clear(uint32_t col) {
+   matrix->fillScreen(col);
+   matrix->show();
+}
+
 bool horizontal = true;
 int it = 0;
 int col = 0;
@@ -52,7 +61,7 @@ uint32_t bgCols[] = {
     LED_BLUE_HIGH,
 };
 
-void cycle_pixels()
+void led_cycle_pixels()
 {
    matrix->setPassThruColor();
    matrix->fillScreen(bgCols[col]);
@@ -77,8 +86,6 @@ void cycle_pixels()
       it = 0;
 
       col = (col + 1) % 3;
-      // Serial.print("col ");
-      // Serial.println(col);
    }
 
    delay(timePerScan / count);
@@ -86,5 +93,6 @@ void cycle_pixels()
 
 void led_loop()
 {
-   cycle_pixels();
+   // cycle_pixels();
+
 }
