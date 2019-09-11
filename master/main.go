@@ -46,7 +46,7 @@ func main() {
   errors.ExitIfErr(err)
   defer client.Close()
 
-  client.SetBrightness(2)
+  client.SetBrightness(8)
 
   colors := []color.RGBA{
     { R: 255 },
@@ -59,7 +59,7 @@ func main() {
     err = client.Clear(colors[it])
     it = (it + 1)%len(colors)
     errors.ExitIfErr(err)
-    time.Sleep(time.Millisecond * 100)
+    time.Sleep(time.Millisecond * 150)
   }
 
 

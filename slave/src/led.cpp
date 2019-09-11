@@ -1,84 +1,94 @@
 #include "led.h"
 
-#include <Adafruit_GFX.h>
-#include <FastLED_NeoMatrix.h>
-#include <FastLED.h>
-#include <LEDMatrix.h>
 #include <Print.h>
 
-cLEDMatrix<MATRIX_TILE_WIDTH, MATRIX_TILE_HEIGHT, VERTICAL_ZIGZAG_MATRIX, MATRIX_TILE_H, MATRIX_TILE_V> ledmatrix;
+#include <NeoPixelBus.h>
+#include <NeoPixelBrightnessBus.h>
 
-// cLEDMatrix creates a FastLED array inside its object and we need to retrieve
-// a pointer to its first element to act as a regular FastLED array, necessary
-// for NeoMatrix and other operations that may work directly on the array like FadeAll.
-CRGB *leds = ledmatrix[0];
+RgbColor red(SATURATION, 0, 0);
+RgbColor green(0, SATURATION, 0);
+RgbColor blue(0, 0, SATURATION);
+RgbColor white(SATURATION);
+RgbColor black(0);
 
-FastLED_NeoMatrix *matrix = new FastLED_NeoMatrix(leds, MATRIX_TILE_WIDTH, MATRIX_TILE_HEIGHT,
-                                                  MATRIX_TILE_H, MATRIX_TILE_V, MATRIX_FLAGS);
+HslColor hslRed(red);
+HslColor hslGreen(green);
+HslColor hslBlue(blue);
+HslColor hslWhite(white);
+HslColor hslBlack(black);
+
+NeoMosaic <ColumnMajorAlternatingLayout> mosaic(
+    MATRIX_TILE_WIDTH,
+    MATRIX_TILE_HEIGHT,
+    MATRIX_TILE_H,
+    MATRIX_TILE_V);
+
+NeoPixelBrightnessBus<NeoGrbFeature, Neo800KbpsMethod> strip(MATRIX_SIZE, LED_PIN);
 
 void led_setup()
 {
    pinMode(LED_PIN, OUTPUT);
-
-   FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, ledmatrix.Size()).setCorrection(TypicalSMD5050);
-   FastLED.setBrightness(BRIGHTNESS);
 
    Serial.print("[LED] Matrix Size: ");
    Serial.print(MATRIX_WIDTH);
    Serial.print("x");
    Serial.println(MATRIX_HEIGHT);
 
-   delay(200);
 
-   matrix_clear();
-   matrix->show();
-}
-
-void matrix_clear()
-{
-   // FastLED.clear does not work properly with multiple matrices connected via parallel inputs
-   // on ESP8266 (not sure about other chips).
-   memset(leds, 0, MATRIX_SIZE);
-   // FastLED.clear();
+   strip.SetBrightness(BRIGHTNESS);
+   strip.Begin();
+   led_clear();
+   strip.Show();
+   Serial.println("[LED] setup done");
 }
 
 void led_set_brightness(int brigth) {
-   matrix->setBrightness(brigth);
+   strip.SetBrightness(brigth);
 }
 
-void led_clear(uint32_t col) {
-   matrix->fillScreen(col);
-   matrix->show();
+void led_clear(RgbColor col) {
+   strip.ClearTo(col);
+}
+
+void draw_line(int x1, int y1, int x2, int y2, RgbColor col)
+{
+   Serial.printf("[LED] draw line between (%d,%d) and (%d,%d)\n", x1, y1, x2, y2);
+
+   for (size_t i = x1; i <= x2; i++)
+   {
+      for (int j = y1; j <= y2; j++)
+      {
+         auto id = mosaic.Map(i,j);
+         // Serial.printf("[LED] setting color for (%d,%d), ledid = %d\n", i, j, id);
+         strip.SetPixelColor(id, col);
+      }
+   }
+
 }
 
 bool horizontal = true;
 int it = 0;
 int col = 0;
-int timePerScan = 2000;
-uint32_t bgCols[] = {
-    LED_RED_HIGH,
-    LED_GREEN_HIGH,
-    LED_BLUE_HIGH,
-};
+RgbColor bgCols[] = { red, green, blue };
 
 void led_cycle_pixels()
 {
-   matrix->setPassThruColor();
-   matrix->fillScreen(bgCols[col]);
+   strip.ClearTo(bgCols[col]);
+
+   auto count = horizontal ? MATRIX_WIDTH : MATRIX_HEIGHT;
+
+   Serial.printf("[LED] line %d / %d\n", it, count);
 
    if (horizontal)
    {
-      matrix->drawFastVLine(it, 0, MATRIX_HEIGHT, LED_WHITE_HIGH);
+      draw_line(it, 0, it, MATRIX_HEIGHT, white);
    }
    else
    {
-      matrix->drawFastHLine(0, it, MATRIX_WIDTH, LED_WHITE_HIGH);
+      draw_line(0, it, MATRIX_WIDTH, it, white);
    }
 
    it++;
-   matrix->show();
-
-   auto count = horizontal ? MATRIX_WIDTH : MATRIX_HEIGHT;
 
    if (it >= count)
    {
@@ -86,13 +96,14 @@ void led_cycle_pixels()
       it = 0;
 
       col = (col + 1) % 3;
+      Serial.printf("[LED] now clearing to 0x%4x\n", bgCols[col]);
    }
-
-   delay(timePerScan / count);
 }
 
 void led_loop()
 {
-   // cycle_pixels();
+   // led_cycle_pixels();
+   strip.Show();
+   // delay(500);
 
 }

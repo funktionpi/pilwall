@@ -50,11 +50,11 @@ func (c *Client) SetBrightness(brightness uint8) error {
 func (c *Client) Clear(color color.RGBA) error {
 
   val := convertColor(color)
-	fmt.Printf("Color: 0x%04x\n", val)
+	fmt.Printf("Color: 0x%06x\n", val)
 
 	req := &Request_ClearRequest{
 		ClearRequest: &ClearRequest{
-			Color: uint32(val),
+			Color: val,
 		},
 	}
 
@@ -93,6 +93,6 @@ func (c *Client) send(req isRequest_Request) error {
 }
 
 // Downgrade 24-bit color to 16-bit (add reverse gamma lookup here?)
-func convertColor(color color.RGBA) uint16 {
-  return (uint16(color.R) & 0xF8 << 8) | (uint16(color.G) & 0xFC << 3) | (uint16(color.B) >> 3)
+func convertColor(color color.RGBA) uint32 {
+  return (uint32(color.R) << 16) | (uint32(color.G) << 8) | (uint32(color.B))
 }

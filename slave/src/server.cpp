@@ -1,4 +1,5 @@
 #include <ESPAsyncWebServer.h>
+#include <internal/RgbColor.h>
 
 #include <pb_encode.h>
 #include <pb_decode.h>
@@ -148,9 +149,14 @@ void ws_process_message(uint8_t *data, size_t len)
       Serial.println("[PB] received a clear request");
       auto color = msg.request.clear_request.color;
 
-      Serial.printf("[PB] Clear color to 0x%x\n", color);
+      auto r = (color & 0x00ff0000) >> 16;
+      auto g = (color & 0x0000ff00) >> 8;
+      auto b = (color & 0x000000ff);
+      RgbColor rgb(r/255.f*SATURATION,g/255.f*SATURATION,b/255.f*SATURATION);
 
-      led_clear(msg.request.clear_request.color);
+      Serial.printf("[PB] Clear color to from (r: %d, g: %d, b: %d) to (r: %d, g: %d, b: %d)\n", r, g, b, rgb.R, rgb.G, rgb.B);
+
+      led_clear(rgb);
       break;
    }
    case ledctrl_Request_display_image_request_tag:
