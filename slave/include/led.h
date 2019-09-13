@@ -29,13 +29,15 @@
 #define LED_BLACK		0
 
 void led_clear(RgbColor col = RgbColor(0));
-void count_pixels();
-void display_lines();
-void display_boxes();
+void led_draw_line(int x1, int y1, int x2, int y2, RgbColor col);
+void led_set_pixel(uint16_t x, uint16_t y, RgbColor color);
+uint16_t led_get_width();
+uint16_t led_get_height();
+void led_set_brightness(int brigth);
+void led_clear(uint32_t col);
+
 void led_setup();
 void led_loop();
 
-void led_set_brightness(int brigth);
-void led_clear(uint32_t col);
 
 #endif

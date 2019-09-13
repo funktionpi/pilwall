@@ -37,5 +37,9 @@ void setup_wifi()
 
 void wifi_loop()
 {
-   Portal.handleClient();
+   if (!WiFi.isConnected())
+   {
+      // Serial.println("[WIFI] handling client");
+      Portal.handleClient();
+   }
 }

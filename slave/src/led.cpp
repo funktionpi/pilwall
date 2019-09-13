@@ -23,7 +23,7 @@ NeoMosaic <ColumnMajorAlternatingLayout> mosaic(
     MATRIX_TILE_H,
     MATRIX_TILE_V);
 
-NeoPixelBrightnessBus<NeoGrbFeature, Neo800KbpsMethod> strip(MATRIX_SIZE, LED_PIN);
+NeoPixelBrightnessBus<NeoGrbFeature, NeoWs2812xMethod> strip(MATRIX_SIZE, LED_PIN);
 
 void led_setup()
 {
@@ -50,9 +50,22 @@ void led_clear(RgbColor col) {
    strip.ClearTo(col);
 }
 
-void draw_line(int x1, int y1, int x2, int y2, RgbColor col)
+uint16_t led_get_width() {
+   return mosaic.getWidth();
+}
+
+uint16_t led_get_height() {
+   return mosaic.getHeight();
+}
+
+void led_set_pixel(uint16_t x, uint16_t y, RgbColor color)
 {
-   Serial.printf("[LED] draw line between (%d,%d) and (%d,%d)\n", x1, y1, x2, y2);
+   strip.SetPixelColor(mosaic.Map(x, y), color);
+}
+
+void led_draw_line(int x1, int y1, int x2, int y2, RgbColor col)
+{
+   // Serial.printf("[LED] draw line between (%d,%d) and (%d,%d)\n", x1, y1, x2, y2);
 
    for (size_t i = x1; i <= x2; i++)
    {
@@ -81,11 +94,11 @@ void led_cycle_pixels()
 
    if (horizontal)
    {
-      draw_line(it, 0, it, MATRIX_HEIGHT, white);
+      led_draw_line(it, 0, it, MATRIX_HEIGHT, white);
    }
    else
    {
-      draw_line(0, it, MATRIX_WIDTH, it, white);
+      led_draw_line(0, it, MATRIX_WIDTH, it, white);
    }
 
    it++;
