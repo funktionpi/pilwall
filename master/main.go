@@ -46,7 +46,13 @@ func main() {
   errors.ExitIfErr(err)
   defer client.Close()
 
-  client.SetBrightness(2)
+  err = client.SetBrightness(8)
+  errors.ExitIfErr(err)
+
+  dimension, err := client.GetDimension()
+  errors.ExitIfErr(err)
+
+  fmt.Printf("screen dimension is %dx%d",dimension.Width, dimension.Height)
 
   colors := []color.RGBA{
     { R: 255 },
@@ -54,12 +60,36 @@ func main() {
     { B: 255 },
   }
 
-  it := 0
-  for {
-    err = client.Clear(colors[it])
-    it = (it + 1)%len(colors)
-    errors.ExitIfErr(err)
-    time.Sleep(time.Millisecond * 100)
+  horizontal := true
+  it := int16(0);
+  col := 0;
+
+  white := color.RGBA{255,255,255,255}
+
+  for  {
+    err = client.Clear(colors[col])
+    errors.PrintIfErr(err)
+
+    count := dimension.Width
+    if !horizontal {
+      count = dimension.Height
+    }
+
+    if horizontal {
+      err = client.DrawLine(it, 0, it, int16(dimension.Height), white)
+      errors.PrintIfErr(err)
+    } else {
+      err = client.DrawLine(0, it, int16(dimension.Width), it, white)
+      errors.PrintIfErr(err)
+    }
+
+    it++;
+
+    if it >= int16(count) {
+      horizontal = !horizontal;
+      it = 0;
+      col = (col + 1) % len(colors);
+    }
   }
 
 

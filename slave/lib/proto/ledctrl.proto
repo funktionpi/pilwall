@@ -7,27 +7,71 @@ option go_package = "slave";
 
 
 message Request {
+   int32 id = 1; // request id
+
    oneof request {
-      ClearRequest clear_request = 1;
-      DisplayImageRequest display_image_request = 2;
-      BrightnessRequest brightness_request = 3;
+      ClearRequest clear = 2;
+      MatrixRequest matrix = 3;
+      BrightnessRequest brightness = 4;
+      PixelsRequest pixels = 6;
+      DrawLineRequest draw_line = 7;
+      DimensionRequest dimension = 8;
    }
 }
 
-message EmptyResponse{}
+message Response {
+   int32 id = 1; // request id this is the response to
 
-/*
-   Color is int32 (r-g-b-a).
-*/
-
-message ClearRequest {
-   uint32 color = 1;
+   oneof response {
+      EmptyResponse empty = 2;
+      DimensionResponse dimension = 3;
+   }
 }
 
-message DisplayImageRequest {
-   repeated uint32 pixels = 1 [(nanopb).max_count = 512];
+message Coord {
+   int32 xy = 1; // encoded x << 16, y << 0
+}
+
+message PixelColor {
+   uint32 color = 1;
+   Coord coord = 2;
+}
+
+message ClearRequest {
+   uint32 color = 1; // r << 16, g << 8, b << 0
+}
+
+/*
+   Draw the whole screen
+*/
+message MatrixRequest {
+   repeated uint32 pixels = 1 [(nanopb).max_count = 1024];
+}
+
+/*
+   Update a list of pixel
+*/
+message PixelsRequest {
+   repeated PixelColor pixels = 1 [(nanopb).max_count = 1024];
 }
 
 message BrightnessRequest {
    int32 brightness = 1;
+}
+
+message DrawLineRequest {
+   uint32 color = 1;
+   Coord start = 2;
+   Coord end = 3;
+}
+
+message DimensionRequest {
+}
+
+message EmptyResponse{
+}
+
+message DimensionResponse {
+   int32 width = 1;
+   int32 height = 2;
 }

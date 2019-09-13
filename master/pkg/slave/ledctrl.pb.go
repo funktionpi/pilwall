@@ -21,10 +21,14 @@ var _ = math.Inf
 const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 type Request struct {
+	Id int32 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 	// Types that are valid to be assigned to Request:
-	//	*Request_ClearRequest
-	//	*Request_DisplayImageRequest
-	//	*Request_BrightnessRequest
+	//	*Request_Clear
+	//	*Request_Matrix
+	//	*Request_Brightness
+	//	*Request_Pixels
+	//	*Request_DrawLine
+	//	*Request_Dimension
 	Request              isRequest_Request `protobuf_oneof:"request"`
 	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
 	XXX_unrecognized     []byte            `json:"-"`
@@ -56,27 +60,52 @@ func (m *Request) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Request proto.InternalMessageInfo
 
+func (m *Request) GetId() int32 {
+	if m != nil {
+		return m.Id
+	}
+	return 0
+}
+
 type isRequest_Request interface {
 	isRequest_Request()
 }
 
-type Request_ClearRequest struct {
-	ClearRequest *ClearRequest `protobuf:"bytes,1,opt,name=clear_request,json=clearRequest,proto3,oneof"`
+type Request_Clear struct {
+	Clear *ClearRequest `protobuf:"bytes,2,opt,name=clear,proto3,oneof"`
 }
 
-type Request_DisplayImageRequest struct {
-	DisplayImageRequest *DisplayImageRequest `protobuf:"bytes,2,opt,name=display_image_request,json=displayImageRequest,proto3,oneof"`
+type Request_Matrix struct {
+	Matrix *MatrixRequest `protobuf:"bytes,3,opt,name=matrix,proto3,oneof"`
 }
 
-type Request_BrightnessRequest struct {
-	BrightnessRequest *BrightnessRequest `protobuf:"bytes,3,opt,name=brightness_request,json=brightnessRequest,proto3,oneof"`
+type Request_Brightness struct {
+	Brightness *BrightnessRequest `protobuf:"bytes,4,opt,name=brightness,proto3,oneof"`
 }
 
-func (*Request_ClearRequest) isRequest_Request() {}
+type Request_Pixels struct {
+	Pixels *PixelsRequest `protobuf:"bytes,6,opt,name=pixels,proto3,oneof"`
+}
 
-func (*Request_DisplayImageRequest) isRequest_Request() {}
+type Request_DrawLine struct {
+	DrawLine *DrawLineRequest `protobuf:"bytes,7,opt,name=draw_line,json=drawLine,proto3,oneof"`
+}
 
-func (*Request_BrightnessRequest) isRequest_Request() {}
+type Request_Dimension struct {
+	Dimension *DimensionRequest `protobuf:"bytes,8,opt,name=dimension,proto3,oneof"`
+}
+
+func (*Request_Clear) isRequest_Request() {}
+
+func (*Request_Matrix) isRequest_Request() {}
+
+func (*Request_Brightness) isRequest_Request() {}
+
+func (*Request_Pixels) isRequest_Request() {}
+
+func (*Request_DrawLine) isRequest_Request() {}
+
+func (*Request_Dimension) isRequest_Request() {}
 
 func (m *Request) GetRequest() isRequest_Request {
 	if m != nil {
@@ -85,23 +114,44 @@ func (m *Request) GetRequest() isRequest_Request {
 	return nil
 }
 
-func (m *Request) GetClearRequest() *ClearRequest {
-	if x, ok := m.GetRequest().(*Request_ClearRequest); ok {
-		return x.ClearRequest
+func (m *Request) GetClear() *ClearRequest {
+	if x, ok := m.GetRequest().(*Request_Clear); ok {
+		return x.Clear
 	}
 	return nil
 }
 
-func (m *Request) GetDisplayImageRequest() *DisplayImageRequest {
-	if x, ok := m.GetRequest().(*Request_DisplayImageRequest); ok {
-		return x.DisplayImageRequest
+func (m *Request) GetMatrix() *MatrixRequest {
+	if x, ok := m.GetRequest().(*Request_Matrix); ok {
+		return x.Matrix
 	}
 	return nil
 }
 
-func (m *Request) GetBrightnessRequest() *BrightnessRequest {
-	if x, ok := m.GetRequest().(*Request_BrightnessRequest); ok {
-		return x.BrightnessRequest
+func (m *Request) GetBrightness() *BrightnessRequest {
+	if x, ok := m.GetRequest().(*Request_Brightness); ok {
+		return x.Brightness
+	}
+	return nil
+}
+
+func (m *Request) GetPixels() *PixelsRequest {
+	if x, ok := m.GetRequest().(*Request_Pixels); ok {
+		return x.Pixels
+	}
+	return nil
+}
+
+func (m *Request) GetDrawLine() *DrawLineRequest {
+	if x, ok := m.GetRequest().(*Request_DrawLine); ok {
+		return x.DrawLine
+	}
+	return nil
+}
+
+func (m *Request) GetDimension() *DimensionRequest {
+	if x, ok := m.GetRequest().(*Request_Dimension); ok {
+		return x.Dimension
 	}
 	return nil
 }
@@ -109,42 +159,188 @@ func (m *Request) GetBrightnessRequest() *BrightnessRequest {
 // XXX_OneofWrappers is for the internal use of the proto package.
 func (*Request) XXX_OneofWrappers() []interface{} {
 	return []interface{}{
-		(*Request_ClearRequest)(nil),
-		(*Request_DisplayImageRequest)(nil),
-		(*Request_BrightnessRequest)(nil),
+		(*Request_Clear)(nil),
+		(*Request_Matrix)(nil),
+		(*Request_Brightness)(nil),
+		(*Request_Pixels)(nil),
+		(*Request_DrawLine)(nil),
+		(*Request_Dimension)(nil),
 	}
 }
 
-type EmptyResponse struct {
+type Response struct {
+	Id int32 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	// Types that are valid to be assigned to Response:
+	//	*Response_Empty
+	//	*Response_Dimension
+	Response             isResponse_Response `protobuf_oneof:"response"`
+	XXX_NoUnkeyedLiteral struct{}            `json:"-"`
+	XXX_unrecognized     []byte              `json:"-"`
+	XXX_sizecache        int32               `json:"-"`
+}
+
+func (m *Response) Reset()         { *m = Response{} }
+func (m *Response) String() string { return proto.CompactTextString(m) }
+func (*Response) ProtoMessage()    {}
+func (*Response) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8aad1ebe4fad0c92, []int{1}
+}
+
+func (m *Response) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Response.Unmarshal(m, b)
+}
+func (m *Response) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Response.Marshal(b, m, deterministic)
+}
+func (m *Response) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Response.Merge(m, src)
+}
+func (m *Response) XXX_Size() int {
+	return xxx_messageInfo_Response.Size(m)
+}
+func (m *Response) XXX_DiscardUnknown() {
+	xxx_messageInfo_Response.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Response proto.InternalMessageInfo
+
+func (m *Response) GetId() int32 {
+	if m != nil {
+		return m.Id
+	}
+	return 0
+}
+
+type isResponse_Response interface {
+	isResponse_Response()
+}
+
+type Response_Empty struct {
+	Empty *EmptyResponse `protobuf:"bytes,2,opt,name=empty,proto3,oneof"`
+}
+
+type Response_Dimension struct {
+	Dimension *DimensionResponse `protobuf:"bytes,3,opt,name=dimension,proto3,oneof"`
+}
+
+func (*Response_Empty) isResponse_Response() {}
+
+func (*Response_Dimension) isResponse_Response() {}
+
+func (m *Response) GetResponse() isResponse_Response {
+	if m != nil {
+		return m.Response
+	}
+	return nil
+}
+
+func (m *Response) GetEmpty() *EmptyResponse {
+	if x, ok := m.GetResponse().(*Response_Empty); ok {
+		return x.Empty
+	}
+	return nil
+}
+
+func (m *Response) GetDimension() *DimensionResponse {
+	if x, ok := m.GetResponse().(*Response_Dimension); ok {
+		return x.Dimension
+	}
+	return nil
+}
+
+// XXX_OneofWrappers is for the internal use of the proto package.
+func (*Response) XXX_OneofWrappers() []interface{} {
+	return []interface{}{
+		(*Response_Empty)(nil),
+		(*Response_Dimension)(nil),
+	}
+}
+
+type Coord struct {
+	Xy                   int32    `protobuf:"varint,1,opt,name=xy,proto3" json:"xy,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *EmptyResponse) Reset()         { *m = EmptyResponse{} }
-func (m *EmptyResponse) String() string { return proto.CompactTextString(m) }
-func (*EmptyResponse) ProtoMessage()    {}
-func (*EmptyResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8aad1ebe4fad0c92, []int{1}
+func (m *Coord) Reset()         { *m = Coord{} }
+func (m *Coord) String() string { return proto.CompactTextString(m) }
+func (*Coord) ProtoMessage()    {}
+func (*Coord) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8aad1ebe4fad0c92, []int{2}
 }
 
-func (m *EmptyResponse) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_EmptyResponse.Unmarshal(m, b)
+func (m *Coord) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Coord.Unmarshal(m, b)
 }
-func (m *EmptyResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_EmptyResponse.Marshal(b, m, deterministic)
+func (m *Coord) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Coord.Marshal(b, m, deterministic)
 }
-func (m *EmptyResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EmptyResponse.Merge(m, src)
+func (m *Coord) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Coord.Merge(m, src)
 }
-func (m *EmptyResponse) XXX_Size() int {
-	return xxx_messageInfo_EmptyResponse.Size(m)
+func (m *Coord) XXX_Size() int {
+	return xxx_messageInfo_Coord.Size(m)
 }
-func (m *EmptyResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_EmptyResponse.DiscardUnknown(m)
+func (m *Coord) XXX_DiscardUnknown() {
+	xxx_messageInfo_Coord.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_EmptyResponse proto.InternalMessageInfo
+var xxx_messageInfo_Coord proto.InternalMessageInfo
+
+func (m *Coord) GetXy() int32 {
+	if m != nil {
+		return m.Xy
+	}
+	return 0
+}
+
+type PixelColor struct {
+	Color                uint32   `protobuf:"varint,1,opt,name=color,proto3" json:"color,omitempty"`
+	Coord                *Coord   `protobuf:"bytes,2,opt,name=coord,proto3" json:"coord,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *PixelColor) Reset()         { *m = PixelColor{} }
+func (m *PixelColor) String() string { return proto.CompactTextString(m) }
+func (*PixelColor) ProtoMessage()    {}
+func (*PixelColor) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8aad1ebe4fad0c92, []int{3}
+}
+
+func (m *PixelColor) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_PixelColor.Unmarshal(m, b)
+}
+func (m *PixelColor) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_PixelColor.Marshal(b, m, deterministic)
+}
+func (m *PixelColor) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PixelColor.Merge(m, src)
+}
+func (m *PixelColor) XXX_Size() int {
+	return xxx_messageInfo_PixelColor.Size(m)
+}
+func (m *PixelColor) XXX_DiscardUnknown() {
+	xxx_messageInfo_PixelColor.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PixelColor proto.InternalMessageInfo
+
+func (m *PixelColor) GetColor() uint32 {
+	if m != nil {
+		return m.Color
+	}
+	return 0
+}
+
+func (m *PixelColor) GetCoord() *Coord {
+	if m != nil {
+		return m.Coord
+	}
+	return nil
+}
 
 type ClearRequest struct {
 	Color                uint32   `protobuf:"varint,1,opt,name=color,proto3" json:"color,omitempty"`
@@ -157,7 +353,7 @@ func (m *ClearRequest) Reset()         { *m = ClearRequest{} }
 func (m *ClearRequest) String() string { return proto.CompactTextString(m) }
 func (*ClearRequest) ProtoMessage()    {}
 func (*ClearRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8aad1ebe4fad0c92, []int{2}
+	return fileDescriptor_8aad1ebe4fad0c92, []int{4}
 }
 
 func (m *ClearRequest) XXX_Unmarshal(b []byte) error {
@@ -185,39 +381,82 @@ func (m *ClearRequest) GetColor() uint32 {
 	return 0
 }
 
-type DisplayImageRequest struct {
+//
+//Draw the whole screen
+type MatrixRequest struct {
 	Pixels               []uint32 `protobuf:"varint,1,rep,packed,name=pixels,proto3" json:"pixels,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *DisplayImageRequest) Reset()         { *m = DisplayImageRequest{} }
-func (m *DisplayImageRequest) String() string { return proto.CompactTextString(m) }
-func (*DisplayImageRequest) ProtoMessage()    {}
-func (*DisplayImageRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8aad1ebe4fad0c92, []int{3}
+func (m *MatrixRequest) Reset()         { *m = MatrixRequest{} }
+func (m *MatrixRequest) String() string { return proto.CompactTextString(m) }
+func (*MatrixRequest) ProtoMessage()    {}
+func (*MatrixRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8aad1ebe4fad0c92, []int{5}
 }
 
-func (m *DisplayImageRequest) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_DisplayImageRequest.Unmarshal(m, b)
+func (m *MatrixRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_MatrixRequest.Unmarshal(m, b)
 }
-func (m *DisplayImageRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_DisplayImageRequest.Marshal(b, m, deterministic)
+func (m *MatrixRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_MatrixRequest.Marshal(b, m, deterministic)
 }
-func (m *DisplayImageRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_DisplayImageRequest.Merge(m, src)
+func (m *MatrixRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MatrixRequest.Merge(m, src)
 }
-func (m *DisplayImageRequest) XXX_Size() int {
-	return xxx_messageInfo_DisplayImageRequest.Size(m)
+func (m *MatrixRequest) XXX_Size() int {
+	return xxx_messageInfo_MatrixRequest.Size(m)
 }
-func (m *DisplayImageRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_DisplayImageRequest.DiscardUnknown(m)
+func (m *MatrixRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MatrixRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_DisplayImageRequest proto.InternalMessageInfo
+var xxx_messageInfo_MatrixRequest proto.InternalMessageInfo
 
-func (m *DisplayImageRequest) GetPixels() []uint32 {
+func (m *MatrixRequest) GetPixels() []uint32 {
+	if m != nil {
+		return m.Pixels
+	}
+	return nil
+}
+
+//
+//Update a list of pixel
+type PixelsRequest struct {
+	Pixels               []*PixelColor `protobuf:"bytes,1,rep,name=pixels,proto3" json:"pixels,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}      `json:"-"`
+	XXX_unrecognized     []byte        `json:"-"`
+	XXX_sizecache        int32         `json:"-"`
+}
+
+func (m *PixelsRequest) Reset()         { *m = PixelsRequest{} }
+func (m *PixelsRequest) String() string { return proto.CompactTextString(m) }
+func (*PixelsRequest) ProtoMessage()    {}
+func (*PixelsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8aad1ebe4fad0c92, []int{6}
+}
+
+func (m *PixelsRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_PixelsRequest.Unmarshal(m, b)
+}
+func (m *PixelsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_PixelsRequest.Marshal(b, m, deterministic)
+}
+func (m *PixelsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PixelsRequest.Merge(m, src)
+}
+func (m *PixelsRequest) XXX_Size() int {
+	return xxx_messageInfo_PixelsRequest.Size(m)
+}
+func (m *PixelsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_PixelsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PixelsRequest proto.InternalMessageInfo
+
+func (m *PixelsRequest) GetPixels() []*PixelColor {
 	if m != nil {
 		return m.Pixels
 	}
@@ -235,7 +474,7 @@ func (m *BrightnessRequest) Reset()         { *m = BrightnessRequest{} }
 func (m *BrightnessRequest) String() string { return proto.CompactTextString(m) }
 func (*BrightnessRequest) ProtoMessage()    {}
 func (*BrightnessRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8aad1ebe4fad0c92, []int{4}
+	return fileDescriptor_8aad1ebe4fad0c92, []int{7}
 }
 
 func (m *BrightnessRequest) XXX_Unmarshal(b []byte) error {
@@ -263,34 +502,218 @@ func (m *BrightnessRequest) GetBrightness() int32 {
 	return 0
 }
 
+type DrawLineRequest struct {
+	Color                uint32   `protobuf:"varint,1,opt,name=color,proto3" json:"color,omitempty"`
+	Start                *Coord   `protobuf:"bytes,2,opt,name=start,proto3" json:"start,omitempty"`
+	End                  *Coord   `protobuf:"bytes,3,opt,name=end,proto3" json:"end,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *DrawLineRequest) Reset()         { *m = DrawLineRequest{} }
+func (m *DrawLineRequest) String() string { return proto.CompactTextString(m) }
+func (*DrawLineRequest) ProtoMessage()    {}
+func (*DrawLineRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8aad1ebe4fad0c92, []int{8}
+}
+
+func (m *DrawLineRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_DrawLineRequest.Unmarshal(m, b)
+}
+func (m *DrawLineRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_DrawLineRequest.Marshal(b, m, deterministic)
+}
+func (m *DrawLineRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DrawLineRequest.Merge(m, src)
+}
+func (m *DrawLineRequest) XXX_Size() int {
+	return xxx_messageInfo_DrawLineRequest.Size(m)
+}
+func (m *DrawLineRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_DrawLineRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DrawLineRequest proto.InternalMessageInfo
+
+func (m *DrawLineRequest) GetColor() uint32 {
+	if m != nil {
+		return m.Color
+	}
+	return 0
+}
+
+func (m *DrawLineRequest) GetStart() *Coord {
+	if m != nil {
+		return m.Start
+	}
+	return nil
+}
+
+func (m *DrawLineRequest) GetEnd() *Coord {
+	if m != nil {
+		return m.End
+	}
+	return nil
+}
+
+type DimensionRequest struct {
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *DimensionRequest) Reset()         { *m = DimensionRequest{} }
+func (m *DimensionRequest) String() string { return proto.CompactTextString(m) }
+func (*DimensionRequest) ProtoMessage()    {}
+func (*DimensionRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8aad1ebe4fad0c92, []int{9}
+}
+
+func (m *DimensionRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_DimensionRequest.Unmarshal(m, b)
+}
+func (m *DimensionRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_DimensionRequest.Marshal(b, m, deterministic)
+}
+func (m *DimensionRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DimensionRequest.Merge(m, src)
+}
+func (m *DimensionRequest) XXX_Size() int {
+	return xxx_messageInfo_DimensionRequest.Size(m)
+}
+func (m *DimensionRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_DimensionRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DimensionRequest proto.InternalMessageInfo
+
+type EmptyResponse struct {
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *EmptyResponse) Reset()         { *m = EmptyResponse{} }
+func (m *EmptyResponse) String() string { return proto.CompactTextString(m) }
+func (*EmptyResponse) ProtoMessage()    {}
+func (*EmptyResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8aad1ebe4fad0c92, []int{10}
+}
+
+func (m *EmptyResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_EmptyResponse.Unmarshal(m, b)
+}
+func (m *EmptyResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_EmptyResponse.Marshal(b, m, deterministic)
+}
+func (m *EmptyResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EmptyResponse.Merge(m, src)
+}
+func (m *EmptyResponse) XXX_Size() int {
+	return xxx_messageInfo_EmptyResponse.Size(m)
+}
+func (m *EmptyResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_EmptyResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EmptyResponse proto.InternalMessageInfo
+
+type DimensionResponse struct {
+	Width                int32    `protobuf:"varint,1,opt,name=width,proto3" json:"width,omitempty"`
+	Height               int32    `protobuf:"varint,2,opt,name=height,proto3" json:"height,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *DimensionResponse) Reset()         { *m = DimensionResponse{} }
+func (m *DimensionResponse) String() string { return proto.CompactTextString(m) }
+func (*DimensionResponse) ProtoMessage()    {}
+func (*DimensionResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8aad1ebe4fad0c92, []int{11}
+}
+
+func (m *DimensionResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_DimensionResponse.Unmarshal(m, b)
+}
+func (m *DimensionResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_DimensionResponse.Marshal(b, m, deterministic)
+}
+func (m *DimensionResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DimensionResponse.Merge(m, src)
+}
+func (m *DimensionResponse) XXX_Size() int {
+	return xxx_messageInfo_DimensionResponse.Size(m)
+}
+func (m *DimensionResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_DimensionResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DimensionResponse proto.InternalMessageInfo
+
+func (m *DimensionResponse) GetWidth() int32 {
+	if m != nil {
+		return m.Width
+	}
+	return 0
+}
+
+func (m *DimensionResponse) GetHeight() int32 {
+	if m != nil {
+		return m.Height
+	}
+	return 0
+}
+
 func init() {
 	proto.RegisterType((*Request)(nil), "ledctrl.Request")
-	proto.RegisterType((*EmptyResponse)(nil), "ledctrl.EmptyResponse")
+	proto.RegisterType((*Response)(nil), "ledctrl.Response")
+	proto.RegisterType((*Coord)(nil), "ledctrl.Coord")
+	proto.RegisterType((*PixelColor)(nil), "ledctrl.PixelColor")
 	proto.RegisterType((*ClearRequest)(nil), "ledctrl.ClearRequest")
-	proto.RegisterType((*DisplayImageRequest)(nil), "ledctrl.DisplayImageRequest")
+	proto.RegisterType((*MatrixRequest)(nil), "ledctrl.MatrixRequest")
+	proto.RegisterType((*PixelsRequest)(nil), "ledctrl.PixelsRequest")
 	proto.RegisterType((*BrightnessRequest)(nil), "ledctrl.BrightnessRequest")
+	proto.RegisterType((*DrawLineRequest)(nil), "ledctrl.DrawLineRequest")
+	proto.RegisterType((*DimensionRequest)(nil), "ledctrl.DimensionRequest")
+	proto.RegisterType((*EmptyResponse)(nil), "ledctrl.EmptyResponse")
+	proto.RegisterType((*DimensionResponse)(nil), "ledctrl.DimensionResponse")
 }
 
 func init() { proto.RegisterFile("ledctrl.proto", fileDescriptor_8aad1ebe4fad0c92) }
 
 var fileDescriptor_8aad1ebe4fad0c92 = []byte{
-	// 279 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x6c, 0x91, 0x41, 0x4b, 0xf3, 0x30,
-	0x1c, 0xc6, 0xdf, 0xbe, 0xb5, 0x2d, 0xfe, 0x6d, 0xd1, 0x65, 0x0e, 0xc6, 0x90, 0x31, 0x8a, 0x87,
-	0x9d, 0x76, 0x70, 0x78, 0x13, 0x84, 0xaa, 0xa0, 0x78, 0xcb, 0xd1, 0xcb, 0x48, 0xdb, 0x3f, 0xb3,
-	0x90, 0x35, 0x31, 0x89, 0xe2, 0x6e, 0x7e, 0x06, 0xbf, 0xaa, 0x5f, 0x40, 0x96, 0xd6, 0xb4, 0x38,
-	0x8f, 0xcf, 0xaf, 0x0f, 0xbf, 0x3e, 0x49, 0x20, 0xe1, 0x58, 0x16, 0x46, 0xf1, 0x85, 0x54, 0xc2,
-	0x08, 0x12, 0xb5, 0x71, 0x12, 0xd7, 0xac, 0x16, 0x32, 0x6f, 0x70, 0xfa, 0xe5, 0x41, 0x44, 0xf1,
-	0xe5, 0x15, 0xb5, 0x21, 0x57, 0x90, 0x14, 0x1c, 0x99, 0x5a, 0xa9, 0x06, 0x8c, 0xbd, 0x99, 0x37,
-	0x3f, 0xba, 0x18, 0x2d, 0x7e, 0x4c, 0x37, 0xbb, 0xaf, 0x6d, 0xfb, 0xfe, 0x1f, 0x8d, 0x8b, 0x5e,
-	0x26, 0x14, 0x46, 0x65, 0xa5, 0x25, 0x67, 0xdb, 0x55, 0xb5, 0x61, 0x6b, 0x74, 0x96, 0xff, 0xd6,
-	0x72, 0xe6, 0x2c, 0xb7, 0x4d, 0xeb, 0x61, 0x57, 0xea, 0x64, 0xc3, 0x72, 0x1f, 0x93, 0x47, 0x20,
-	0xb9, 0xaa, 0xd6, 0xcf, 0xa6, 0x46, 0xad, 0x9d, 0xd0, 0xb7, 0xc2, 0x89, 0x13, 0x66, 0xae, 0xd2,
-	0xe9, 0x06, 0xf9, 0x6f, 0x98, 0x1d, 0x42, 0xd4, 0x1a, 0xd2, 0x63, 0x48, 0xee, 0x36, 0xd2, 0x6c,
-	0x29, 0x6a, 0x29, 0x6a, 0x8d, 0xe9, 0x39, 0xc4, 0xfd, 0xc3, 0x91, 0x53, 0x08, 0x0a, 0xc1, 0x85,
-	0xb2, 0x57, 0x90, 0xd0, 0x26, 0xa4, 0x97, 0x30, 0xfc, 0x63, 0x3c, 0x99, 0x42, 0x28, 0xab, 0x77,
-	0xe4, 0x7a, 0xec, 0xcd, 0xfc, 0x79, 0x92, 0x85, 0x9f, 0xd7, 0xfe, 0xc9, 0xc7, 0x01, 0x6d, 0x69,
-	0xba, 0x84, 0xc1, 0xde, 0x44, 0x32, 0x05, 0xe8, 0x26, 0xda, 0xdf, 0x04, 0xb4, 0x47, 0xb2, 0xe8,
-	0x29, 0xd0, 0x9c, 0xbd, 0x61, 0x1e, 0xda, 0x87, 0x5a, 0x7e, 0x07, 0x00, 0x00, 0xff, 0xff, 0x94,
-	0xf3, 0xcd, 0x1e, 0xd0, 0x01, 0x00, 0x00,
+	// 489 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x54, 0xcb, 0x6e, 0x13, 0x31,
+	0x14, 0x25, 0x19, 0xe6, 0x91, 0xdb, 0x4e, 0x1f, 0x06, 0xca, 0xd0, 0x45, 0x15, 0x59, 0x5d, 0x64,
+	0x43, 0x40, 0xcd, 0x02, 0x81, 0x90, 0x10, 0x49, 0x91, 0xba, 0x00, 0x09, 0xcd, 0x92, 0x0d, 0x9a,
+	0xc4, 0x16, 0xb1, 0x34, 0xb1, 0x07, 0xdb, 0x90, 0x64, 0xc7, 0x37, 0xf4, 0x2f, 0xf9, 0x0b, 0x64,
+	0x8f, 0xe7, 0x19, 0xba, 0x1b, 0x9f, 0x7b, 0x8e, 0x7d, 0xef, 0xb9, 0x47, 0x03, 0x71, 0x4e, 0xc9,
+	0x4a, 0xcb, 0x7c, 0x5a, 0x48, 0xa1, 0x05, 0x0a, 0xdd, 0xf1, 0xf2, 0x98, 0x67, 0x5c, 0x14, 0xcb,
+	0x12, 0xc6, 0x7f, 0x87, 0x10, 0xa6, 0xf4, 0xe7, 0x2f, 0xaa, 0x34, 0x3a, 0x81, 0x21, 0x23, 0xc9,
+	0x60, 0x3c, 0x98, 0xf8, 0xe9, 0x90, 0x11, 0xf4, 0x12, 0xfc, 0x55, 0x4e, 0x33, 0x99, 0x0c, 0xc7,
+	0x83, 0xc9, 0xd1, 0xcd, 0xb3, 0x69, 0x75, 0xe3, 0xc2, 0xa0, 0x4e, 0x75, 0xf7, 0x28, 0x2d, 0x59,
+	0xe8, 0x35, 0x04, 0x9b, 0x4c, 0x4b, 0xb6, 0x4b, 0x3c, 0xcb, 0xbf, 0xa8, 0xf9, 0x5f, 0x2c, 0xdc,
+	0x08, 0x1c, 0x0f, 0xbd, 0x07, 0x58, 0x4a, 0xf6, 0x63, 0xad, 0x39, 0x55, 0x2a, 0x79, 0x6c, 0x55,
+	0x97, 0xb5, 0x6a, 0x5e, 0x97, 0x1a, 0x65, 0x8b, 0x6f, 0xde, 0x2b, 0xd8, 0x8e, 0xe6, 0x2a, 0x09,
+	0x7a, 0xef, 0x7d, 0xb5, 0x70, 0xeb, 0xbd, 0x92, 0x87, 0xde, 0xc0, 0x88, 0xc8, 0x6c, 0xfb, 0x3d,
+	0x67, 0x9c, 0x26, 0xa1, 0x15, 0x25, 0xb5, 0xe8, 0x56, 0x66, 0xdb, 0xcf, 0x8c, 0xd3, 0x46, 0x16,
+	0x11, 0x07, 0xa1, 0xb7, 0x30, 0x22, 0x6c, 0x43, 0xb9, 0x62, 0x82, 0x27, 0x91, 0x15, 0xbe, 0x68,
+	0x84, 0x55, 0xa5, 0x51, 0x36, 0xec, 0xf9, 0x08, 0x42, 0x59, 0xe2, 0xf8, 0x7e, 0x00, 0x51, 0x4a,
+	0x55, 0x21, 0xb8, 0xa2, 0x07, 0x66, 0x4f, 0xc1, 0xa7, 0x9b, 0x42, 0xef, 0x9d, 0xd9, 0xcd, 0x30,
+	0x9f, 0x0c, 0x5a, 0xc9, 0x8c, 0xdb, 0x96, 0x86, 0xde, 0xb5, 0x5b, 0xf2, 0x7a, 0xd6, 0xb5, 0x5a,
+	0xaa, 0x75, 0xad, 0x9e, 0x00, 0x22, 0xe9, 0x0a, 0xf8, 0x39, 0xf8, 0x0b, 0x21, 0x24, 0x31, 0x0d,
+	0xed, 0xf6, 0x55, 0x43, 0xbb, 0x3d, 0xbe, 0x03, 0xb0, 0x3e, 0x2e, 0x44, 0x2e, 0x24, 0x7a, 0x0a,
+	0xfe, 0xca, 0x7c, 0x58, 0x42, 0x9c, 0x96, 0x07, 0x74, 0x6d, 0x50, 0x21, 0x89, 0x6b, 0xfa, 0xa4,
+	0x49, 0x88, 0x41, 0xd3, 0xb2, 0x88, 0xaf, 0xe1, 0xb8, 0x9d, 0x98, 0xff, 0xdf, 0x85, 0x5f, 0x41,
+	0xdc, 0xc9, 0x09, 0xba, 0xaa, 0xf7, 0x3b, 0x18, 0x7b, 0x93, 0x78, 0x1e, 0xdc, 0x7f, 0xf0, 0xce,
+	0xfe, 0x44, 0xd5, 0x36, 0xf1, 0x2d, 0xc4, 0x9d, 0x45, 0xa3, 0x59, 0x47, 0x70, 0x74, 0xf3, 0xa4,
+	0x1b, 0x08, 0x3b, 0xc8, 0xc1, 0x2d, 0x33, 0x38, 0x3f, 0x08, 0x1a, 0xba, 0xea, 0x04, 0xb3, 0xf4,
+	0xa4, 0x85, 0x60, 0x01, 0xa7, 0xbd, 0xb8, 0x3c, 0x6c, 0x90, 0xd2, 0x99, 0xd4, 0x0f, 0x19, 0x64,
+	0x8b, 0x68, 0x0c, 0x1e, 0xe5, 0xc4, 0x6d, 0xb1, 0xcf, 0x31, 0x25, 0x8c, 0xe0, 0xac, 0x1f, 0x33,
+	0x7c, 0x0a, 0x71, 0x27, 0x1b, 0xf8, 0x23, 0x9c, 0x1f, 0x2c, 0xde, 0xf4, 0xb5, 0x65, 0x44, 0xaf,
+	0xdd, 0x14, 0xe5, 0x01, 0x5d, 0x40, 0xb0, 0xa6, 0x66, 0x1c, 0xdb, 0x98, 0x9f, 0xba, 0xd3, 0x3c,
+	0xfc, 0xe6, 0xab, 0x3c, 0xfb, 0x4d, 0x97, 0x81, 0xfd, 0x3d, 0xcc, 0xfe, 0x05, 0x00, 0x00, 0xff,
+	0xff, 0x72, 0x0b, 0xa7, 0x21, 0x46, 0x04, 0x00, 0x00,
 }
