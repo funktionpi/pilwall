@@ -1,5 +1,5 @@
 #include <ESPAsyncWebServer.h>
-#include <internal/RgbColor.h>
+// #include <internal/RgbColor.h>
 
 #include <pb_encode.h>
 #include <pb_decode.h>
@@ -136,12 +136,13 @@ void ws_process_request(AsyncWebSocket *server, AsyncWebSocketClient *client, Aw
    }
 }
 
-RgbColor fromProtoColor(uint32_t color)
+CRGB fromProtoColor(uint32_t color)
 {
    auto r = (color & 0x00ff0000) >> 16;
    auto g = (color & 0x0000ff00) >> 8;
    auto b = (color & 0x000000ff);
-   return RgbColor(r / 255.f * SATURATION, g / 255.f * SATURATION, b / 255.f * SATURATION);
+   // return RgbColor(r / 255.f * SATURATION, g / 255.f * SATURATION, b / 255.f * SATURATION);
+   return CRGB(r, g, b);
 }
 
 void ws_process_message(uint8_t *data, size_t len, ledctrl_Response &response)
@@ -176,9 +177,9 @@ void ws_process_message(uint8_t *data, size_t len, ledctrl_Response &response)
    case ledctrl_Request_clear_tag:
    {
       Serial.println("[PB] received a clear request");
-      auto color = fromProtoColor(msg.request.clear.color);
+      auto color = CRGB(msg.request.clear.color);
       Serial.printf("[PB] Clear color to (r: %d, g: %d, b: %d)\n",
-                    color.R, color.G, color.B);
+                    color.red, color.green, color.blue);
       led_clear(color);
       break;
    }
@@ -222,7 +223,7 @@ void ws_process_message(uint8_t *data, size_t len, ledctrl_Response &response)
       auto x2 = (msg.request.draw_line.end.xy & 0xFFFF0000) >> 16;
       auto y2 = (msg.request.draw_line.end.xy & 0x0000FFFF);
 
-      auto color = fromProtoColor(msg.request.draw_line.color);
+      auto color =  (msg.request.draw_line.color);
 
       led_draw_line(x1, y1, x2, y2, color);
       break;

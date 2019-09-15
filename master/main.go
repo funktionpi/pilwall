@@ -13,6 +13,14 @@ import (
   "time"
 )
 
+var (
+  White = color.RGBA{255,255,255,255}
+  Black = color.RGBA{}
+  Red = color.RGBA{R:255}
+  Blue = color.RGBA{B:255}
+  Green = color.RGBA{G:255}
+)
+
 func main() {
 
   entriesCh := make(chan *mdns.ServiceEntry, 4)
@@ -54,6 +62,13 @@ func main() {
 
   fmt.Printf("screen dimension is %dx%d",dimension.Width, dimension.Height)
 
+  //scrobe(client)
+  scanLines(client, dimension)
+
+  //WaitForCtrlC()
+}
+
+func scanLines(client *slave.Client, dimension *slave.DimensionResponse) {
   colors := []color.RGBA{
     { R: 255 },
     { G: 255 },
@@ -67,7 +82,7 @@ func main() {
   white := color.RGBA{255,255,255,255}
 
   for  {
-    err = client.Clear(colors[col])
+    err := client.Clear(colors[col])
     errors.PrintIfErr(err)
 
     count := dimension.Width
@@ -91,9 +106,17 @@ func main() {
       col = (col + 1) % len(colors);
     }
   }
+}
 
+func scrobe(client *slave.Client) {
+  colors := []color.RGBA{Black, White}
 
-  //WaitForCtrlC()
+  idx := 0
+  for {
+    idx = (idx+1) % len(colors)
+    client.Clear(colors[idx])
+    time.Sleep(time.Millisecond * 40)
+  }
 }
 
 
