@@ -62,8 +62,8 @@ func main() {
 
   fmt.Printf("screen dimension is %dx%d",dimension.Width, dimension.Height)
 
-  //scrobe(client)
-  scanLines(client, dimension)
+  scrobe(client)
+  //scanLines(client, dimension)
 
   //WaitForCtrlC()
 }

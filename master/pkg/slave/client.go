@@ -157,7 +157,7 @@ func (c *Client) send(req isRequest_Request) (*Response, error) {
 	// block until we received a response
 	select {
 	case response := <- respChan:
-		println("response received successfully")
+		//println("response received successfully")
 		return response, nil
 	case <- time.After(1 * time.Second):
 		println("response timeout")

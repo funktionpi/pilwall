@@ -26,7 +26,7 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
    else if (type == WS_EVT_DISCONNECT)
    {
       Serial.printf("[SVR] ws[%s][%u] disconnect:\n", server->url(), client->id());
-      led_clear();
+      LEDs().Clear(0);
    }
    else if (type == WS_EVT_ERROR)
    {
@@ -170,8 +170,8 @@ void ws_process_message(uint8_t *data, size_t len, ledctrl_Response &response)
    {
       Serial.println("[PB] received a dimension request");
       response.which_response = ledctrl_Response_dimension_tag;
-      response.response.dimension.width = led_get_width();
-      response.response.dimension.height = led_get_height();
+      response.response.dimension.width = LEDs().Width();
+      response.response.dimension.height = LEDs().Height();
       break;
    }
    case ledctrl_Request_clear_tag:
@@ -180,19 +180,22 @@ void ws_process_message(uint8_t *data, size_t len, ledctrl_Response &response)
       auto color = CRGB(msg.request.clear.color);
       Serial.printf("[PB] Clear color to (r: %d, g: %d, b: %d)\n",
                     color.red, color.green, color.blue);
-      led_clear(color);
+      LEDs().Clear(color);
       break;
    }
    case ledctrl_Request_matrix_tag:
    {
       Serial.println("[PB] received a matrix request");
 
-      for (int x = 0; x < led_get_width(); ++x)
+      auto width = LEDs().Width();
+      auto height = LEDs().Height();
+
+      for (int x = 0; x < width; ++x)
       {
-         for (int y = 0; y < led_get_height(); ++y)
+         for (int y = 0; y < height; ++y)
          {
-            auto color = msg.request.matrix.pixels[x * led_get_width() + y];
-            led_set_pixel(x, y, color);
+            auto color = msg.request.matrix.pixels[x * width + y];
+            LEDs().SetPixel(x, y, color);
          }
       }
 
@@ -208,7 +211,7 @@ void ws_process_message(uint8_t *data, size_t len, ledctrl_Response &response)
          auto x = (pixel.coord.xy & 0xFFFF0000) >> 16;
          auto y = (pixel.coord.xy & 0x0000FFFF);
          auto color = fromProtoColor(pixel.color);
-         led_set_pixel(x, y, color);
+         LEDs().SetPixel(x, y, color);
       }
 
       break;
@@ -225,7 +228,7 @@ void ws_process_message(uint8_t *data, size_t len, ledctrl_Response &response)
 
       auto color =  (msg.request.draw_line.color);
 
-      led_draw_line(x1, y1, x2, y2, color);
+      LEDs().DrawLine(x1, y1, x2, y2, color);
       break;
    }
    case ledctrl_Request_brightness_tag:
@@ -242,7 +245,7 @@ void ws_process_message(uint8_t *data, size_t len, ledctrl_Response &response)
          val = 0;
       }
 
-      led_set_brightness(val);
+      LEDs().SetBrightness(val);
       break;
    }
    }
