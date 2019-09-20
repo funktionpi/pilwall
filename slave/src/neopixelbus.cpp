@@ -1,4 +1,6 @@
 #include "led.h"
+#include "log.h"
+
 #include <NeoPixelBrightnessBus.h>
 
 typedef NeoPixelBrightnessBus<NeoGrbFeature, NeoEsp32Rmt0Ws2812xMethod> NeoPixelChannel0;
@@ -22,7 +24,7 @@ NeoPixelBusController::NeoPixelBusController()
 
 void NeoPixelBusController::Setup()
 {
-   Serial.println("[LED] init NeoPixelBus library");
+   LOGLN("[LED] init NeoPixelBus library");
 
    _impl->strip0 = new NeoPixelChannel0(LED_CHANNEL_WIDTH, FIRST_LED_PIN);
    _impl->strip0->Begin();
@@ -54,7 +56,7 @@ void NeoPixelBusController::Loop()
    if (_impl->strip3) _impl->strip3->Show();
 }
 
-RgbColor adjustColor(int brightness, uint32_t _color)
+RgbColor adjustColor(int brightness, CRGB _color)
 {
    CRGB tmp (_color);
    auto adjust = CLEDController::computeAdjustment(255, TypicalSMD5050, UncorrectedTemperature);
@@ -64,12 +66,12 @@ RgbColor adjustColor(int brightness, uint32_t _color)
        tmp.g * adjust.g / 255,
        tmp.b * adjust.b / 255);
 
-   // Serial.printf("[LED] adjusting color (%d, %d, %d) by (%d, %d, %d) resulting in (%d, %d, %d)\n", tmp.r, tmp.g, tmp.b, adjust.r, adjust.g, adjust.b, out.R, out.G, out.B);
+   // LOGF("[LED] adjusting color (%d, %d, %d) by (%d, %d, %d) resulting in (%d, %d, %d)\n", tmp.r, tmp.g, tmp.b, adjust.r, adjust.g, adjust.b, out.R, out.G, out.B);
 
    return out;
 }
 
-void NeoPixelBusController::SetPixel(uint16_t x, uint16_t y, uint32_t _color)
+void NeoPixelBusController::SetPixel(uint16_t x, uint16_t y, CRGB _color)
 {
    auto color = adjustColor(_impl->strip0->GetBrightness(), _color);
    auto idx = mosaic.Map(x, y);
@@ -82,10 +84,10 @@ void NeoPixelBusController::SetPixel(uint16_t x, uint16_t y, uint32_t _color)
    else if (stripId == 3) _impl->strip3->SetPixelColor(idx, color);
 }
 
-void NeoPixelBusController::Clear(uint32_t _color)
+void NeoPixelBusController::Clear(CRGB _color)
 {
    // CRGB tmp(_color);
-   // Serial.printf("[LED] now clearing to (R: %d, G: %d, B: %d)\n", tmp.r, tmp.g, tmp.b);
+   // LOGF("[LED] now clearing to (R: %d, G: %d, B: %d)\n", tmp.r, tmp.g, tmp.b);
 
    auto color = adjustColor(_impl->strip0->GetBrightness(), _color);
 

@@ -4,6 +4,8 @@
 #include <AutoConnect.h>
 
 #include "config.h"
+#include "log.h"
+
 
 WebServer Server;
 AutoConnect Portal(Server);
@@ -27,11 +29,11 @@ void setup_wifi()
    Server.on("/", rootPage);
    if (Portal.begin())
    {
-      Serial.println("[WIFI] Web server started: " + WiFi.localIP().toString());
+      LOGLN("[WIFI] Web server started: " + WiFi.localIP().toString());
    }
    else
    {
-      Serial.println("[WIFI] Failed to start server");
+      LOGLN("[WIFI] Failed to start server");
    }
 }
 
@@ -39,7 +41,7 @@ void wifi_loop()
 {
    if (!WiFi.isConnected())
    {
-      // Serial.println("[WIFI] handling client");
+      // LOGLN("[WIFI] handling client");
       Portal.handleClient();
    }
 }

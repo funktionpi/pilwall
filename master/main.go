@@ -79,8 +79,6 @@ func scanLines(client *slave.Client, dimension *slave.DimensionResponse) {
   it := int16(0);
   col := 0;
 
-  white := color.RGBA{255,255,255,255}
-
   for  {
     err := client.Clear(colors[col])
     errors.PrintIfErr(err)
@@ -91,10 +89,10 @@ func scanLines(client *slave.Client, dimension *slave.DimensionResponse) {
     }
 
     if horizontal {
-      err = client.DrawLine(it, 0, it, int16(dimension.Height), white)
+      err = client.DrawLine(it, 0, it, int16(dimension.Height), White)
       errors.PrintIfErr(err)
     } else {
-      err = client.DrawLine(0, it, int16(dimension.Width), it, white)
+      err = client.DrawLine(0, it, int16(dimension.Width), it, White)
       errors.PrintIfErr(err)
     }
 

@@ -5,6 +5,7 @@
 #include <ESP8266mDNS.h>
 #endif
 
+#include "log.h"
 #include "config.h"
 
 void setup_mdns()

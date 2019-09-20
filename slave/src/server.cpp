@@ -5,6 +5,7 @@
 #include <pb_decode.h>
 #include <ledctrl.pb.h>
 #include <led.h>
+#include "log.h"
 
 #include "config.h"
 
@@ -19,22 +20,22 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
 {
    if (type == WS_EVT_CONNECT)
    {
-      Serial.printf("[SVR] ws[%s][%u] connect\n", server->url(), client->id());
+      LOGF("[SVR] ws[%s][%u] connect\n", server->url(), client->id());
       client->printf("You are client #%u", client->id());
       client->ping();
    }
    else if (type == WS_EVT_DISCONNECT)
    {
-      Serial.printf("[SVR] ws[%s][%u] disconnect:\n", server->url(), client->id());
+      LOGF("[SVR] ws[%s][%u] disconnect:\n", server->url(), client->id());
       LEDs().Clear(0);
    }
    else if (type == WS_EVT_ERROR)
    {
-      Serial.printf("[SVR] ws[%s][%u] error(%u): %s\n", server->url(), client->id(), *((uint16_t *)arg), (char *)data);
+      LOGF("[SVR] ws[%s][%u] error(%u): %s\n", server->url(), client->id(), *((uint16_t *)arg), (char *)data);
    }
    else if (type == WS_EVT_PONG)
    {
-      Serial.printf("[SVR] ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len) ? (char *)data : "");
+      LOGF("[SVR] ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len) ? (char *)data : "");
    }
    else if (type == WS_EVT_DATA)
    {
@@ -49,7 +50,7 @@ void ws_process_request(AsyncWebSocket *server, AsyncWebSocketClient *client, Aw
    if (info->final && info->index == 0 && info->len == len)
    {
       //the whole message is in a single frame and we got all of it's data
-      Serial.printf("[SVR] ws[%s][%u] %s-message[%llu] \n", server->url(), client->id(), (info->opcode == WS_TEXT) ? "text" : "binary", info->len);
+      LOGF("[SVR] ws[%s][%u] %s-message[%llu] \n", server->url(), client->id(), (info->opcode == WS_TEXT) ? "text" : "binary", info->len);
 
       ledctrl_Response response = ledctrl_Response_init_default;
 
@@ -59,7 +60,7 @@ void ws_process_request(AsyncWebSocket *server, AsyncWebSocketClient *client, Aw
          {
             msg += (char)data[i];
          }
-         Serial.printf("[SVR] Text message: %s\n", msg.c_str());
+         LOGF("[SVR] Text message: %s\n", msg.c_str());
       }
       else
       {
@@ -76,16 +77,16 @@ void ws_process_request(AsyncWebSocket *server, AsyncWebSocketClient *client, Aw
          auto ostream = pb_ostream_from_buffer(buf, sizeof(buf));
          if (!pb_encode(&ostream, ledctrl_Response_fields, &response))
          {
-            Serial.printf("[SVR] Could not encode response for request %d\n", response.id);
+            LOGF("[SVR] Could not encode response for request %d\n", response.id);
             return;
          }
          size_t buflen;
          if (!pb_get_encoded_size(&buflen, ledctrl_Response_fields, &response))
          {
-            Serial.printf("[SVR] Could not compute reponse size for request %d\n", response.id);
+            LOGF("[SVR] Could not compute reponse size for request %d\n", response.id);
             return;
          }
-         Serial.printf("[SVR] Sending response for request %d, size %d\n", response.id, buflen);
+         LOGF("[SVR] Sending response for request %d, size %d\n", response.id, buflen);
          client->binary((char *)buf, buflen);
       }
    }
@@ -96,12 +97,12 @@ void ws_process_request(AsyncWebSocket *server, AsyncWebSocketClient *client, Aw
       {
          if (info->num == 0)
          {
-            Serial.printf("[SVR] ws[%s][%u] %s-message start\n", server->url(), client->id(), (info->message_opcode == WS_TEXT) ? "text" : "binary");
+            LOGF("[SVR] ws[%s][%u] %s-message start\n", server->url(), client->id(), (info->message_opcode == WS_TEXT) ? "text" : "binary");
          }
-         Serial.printf("[SVR] ws[%s][%u] frame[%u] start[%llu]\n", server->url(), client->id(), info->num, info->len);
+         LOGF("[SVR] ws[%s][%u] frame[%u] start[%llu]\n", server->url(), client->id(), info->num, info->len);
       }
 
-      Serial.printf("[SVR] ws[%s][%u] frame[%u] %s[%llu - %llu]: ", server->url(), client->id(), info->num, (info->message_opcode == WS_TEXT) ? "text" : "binary", info->index, info->index + len);
+      LOGF("[SVR] ws[%s][%u] frame[%u] %s[%llu - %llu]: ", server->url(), client->id(), info->num, (info->message_opcode == WS_TEXT) ? "text" : "binary", info->index, info->index + len);
 
       if (info->opcode == WS_TEXT)
       {
@@ -119,14 +120,14 @@ void ws_process_request(AsyncWebSocket *server, AsyncWebSocketClient *client, Aw
             msg += buff;
          }
       }
-      Serial.printf("[SVR] %s\n", msg.c_str());
+      LOGF("[SVR] %s\n", msg.c_str());
 
       if ((info->index + len) == info->len)
       {
-         Serial.printf("[SVR] ws[%s][%u] frame[%u] end[%llu]\n", server->url(), client->id(), info->num, info->len);
+         LOGF("[SVR] ws[%s][%u] frame[%u] end[%llu]\n", server->url(), client->id(), info->num, info->len);
          if (info->final)
          {
-            Serial.printf("[SVR] ws[%s][%u] %s-message end\n", server->url(), client->id(), (info->message_opcode == WS_TEXT) ? "text" : "binary");
+            LOGF("[SVR] ws[%s][%u] %s-message end\n", server->url(), client->id(), (info->message_opcode == WS_TEXT) ? "text" : "binary");
             if (info->message_opcode == WS_TEXT)
                client->text("I got your text message");
             // else
@@ -147,7 +148,7 @@ CRGB fromProtoColor(uint32_t color)
 
 void ws_process_message(uint8_t *data, size_t len, ledctrl_Response &response)
 {
-   Serial.println("[PB] decoding protobuf message");
+   LOGLN("[PB] decoding protobuf message");
 
    auto stream = pb_istream_from_buffer(data, len);
 
@@ -157,18 +158,18 @@ void ws_process_message(uint8_t *data, size_t len, ledctrl_Response &response)
 
    if (!status)
    {
-      Serial.printf("[PB] Decoding failed: %s\n", PB_GET_ERROR(&stream));
+      LOGF("[PB] Decoding failed: %s\n", PB_GET_ERROR(&stream));
       return;
    }
 
    response.id = msg.id;
-   Serial.printf("[PB] Id: %d, Tag: %d\n", msg.id, msg.which_request);
+   LOGF("[PB] Id: %d, Tag: %d\n", msg.id, msg.which_request);
 
    switch (msg.which_request)
    {
    case ledctrl_Request_dimension_tag:
    {
-      Serial.println("[PB] received a dimension request");
+      LOGLN("[PB] received a dimension request");
       response.which_response = ledctrl_Response_dimension_tag;
       response.response.dimension.width = LEDs().Width();
       response.response.dimension.height = LEDs().Height();
@@ -176,16 +177,16 @@ void ws_process_message(uint8_t *data, size_t len, ledctrl_Response &response)
    }
    case ledctrl_Request_clear_tag:
    {
-      Serial.println("[PB] received a clear request");
+      LOGLN("[PB] received a clear request");
       auto color = CRGB(msg.request.clear.color);
-      Serial.printf("[PB] Clear color to (r: %d, g: %d, b: %d)\n",
+      LOGF("[PB] Clear color to (r: %d, g: %d, b: %d)\n",
                     color.red, color.green, color.blue);
       LEDs().Clear(color);
       break;
    }
    case ledctrl_Request_matrix_tag:
    {
-      Serial.println("[PB] received a matrix request");
+      LOGLN("[PB] received a matrix request");
 
       auto width = LEDs().Width();
       auto height = LEDs().Height();
@@ -203,7 +204,7 @@ void ws_process_message(uint8_t *data, size_t len, ledctrl_Response &response)
    }
    case ledctrl_Request_pixels_tag:
    {
-      Serial.println("[PB] received a pixels request");
+      LOGLN("[PB] received a pixels request");
 
       for (int it = 0; it < msg.request.pixels.pixels_count; ++it)
       {
@@ -218,7 +219,7 @@ void ws_process_message(uint8_t *data, size_t len, ledctrl_Response &response)
    }
    case ledctrl_Request_draw_line_tag:
    {
-      Serial.println("[PB] received a draw_line request");
+      LOGLN("[PB] received a draw_line request");
 
       auto x1 = (msg.request.draw_line.start.xy & 0xFFFF0000) >> 16;
       auto y1 = (msg.request.draw_line.start.xy & 0x0000FFFF);
@@ -233,7 +234,7 @@ void ws_process_message(uint8_t *data, size_t len, ledctrl_Response &response)
    }
    case ledctrl_Request_brightness_tag:
    {
-      Serial.println("[PB] received a set brightness request");
+      LOGLN("[PB] received a set brightness request");
 
       auto val = msg.request.brightness.brightness;
       if (val > 255)

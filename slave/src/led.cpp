@@ -1,10 +1,10 @@
 #include "led.h"
+#include "log.h"
 
 #include <Print.h>
 
 #include <NeoPixelBus.h>
 #include <NeoPixelBrightnessBus.h>
-#include <FastLED.h>
 
 
 void led_show();
@@ -13,13 +13,13 @@ DefaultLedLibrary controller;
 
 void led_setup()
 {
-   Serial.printf("[LED] Matrix Size: %dx%d\n", MATRIX_WIDTH, MATRIX_HEIGHT);
-   Serial.printf("[LED] Using %d channels with %d pixels\n", LED_CHANNEL_COUNT, LED_CHANNEL_WIDTH);
+   LOGF("[LED] Matrix Size: %dx%d\n", MATRIX_WIDTH, MATRIX_HEIGHT);
+   LOGF("[LED] Using %d channels with %d pixels\n", LED_CHANNEL_COUNT, LED_CHANNEL_WIDTH);
 
    controller.Setup();
    controller.SetBrightness(DEFAULT_BRIGHTNESS);
 
-   Serial.println("[LED] setup done");
+   LOGLN("[LED] setup done");
 }
 
 void led_show()
@@ -41,17 +41,19 @@ void led_cycle_pixels()
 {
    controller.Clear(colorToInt(bgCols[col]));
 
+   delay(20);
+
    auto count = horizontal ? MATRIX_WIDTH : MATRIX_HEIGHT;
 
-   // Serial.printf("[LED] line %d / %d\n", it, count);
+   // LOGF("[LED] line %d / %d\n", it, count);
 
    if (horizontal)
    {
-      controller.DrawLine(it, 0, it, MATRIX_HEIGHT, colorToInt(CRGB::White));
+      controller.DrawLine(it, 0, it, MATRIX_HEIGHT, CRGB::White);
    }
    else
    {
-      controller.DrawLine(0, it, MATRIX_WIDTH, it, colorToInt(CRGB::White));
+      controller.DrawLine(0, it, MATRIX_WIDTH, it, CRGB::White);
    }
 
    it++;
@@ -62,22 +64,25 @@ void led_cycle_pixels()
       it = 0;
 
       col = (col + 1) % (sizeof(bgCols) / sizeof(CRGB));
-      Serial.printf("[LED] now clearing to (R: %d, G: %d, B: %d)\n", bgCols[col].r, bgCols[col].g, bgCols[col].b);
+      LOGF("[LED] now clearing to (R: %d, G: %d, B: %d)\n", bgCols[col].r, bgCols[col].g, bgCols[col].b);
    }
 }
 
 void led_flash_colors()
 {
-   FastLED.delay(50);
+   delay(50);
    auto color = bgCols[col];
    controller.Clear(colorToInt(color));
+
+   // controller.DrawLine(0, 0, MATRIX_WIDTH, 0, bgCols[col]);
+   // controller.DrawLine(0, 1, MATRIX_WIDTH, 1, bgCols[col]);
+
    col = (col + 1) % (sizeof(bgCols) / sizeof(CRGB));
 }
 
 void led_loop()
 {
-   Serial.println("led loop");
-   led_cycle_pixels();
+   // led_cycle_pixels();
    // led_flash_colors();
    controller.Loop();
 }

@@ -15,7 +15,7 @@ uint16_t LedController::Height()
    return mosaic.getHeight();
 }
 
-void LedController::DrawLine(int x1, int y1, int x2, int y2, uint32_t col)
+void LedController::DrawLine(int x1, int y1, int x2, int y2, CRGB col)
 {
    for (size_t i = x1; i <= x2; i++)
    {
