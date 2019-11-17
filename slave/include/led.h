@@ -5,11 +5,15 @@
 #include <FastLED.h>
 #include <NeoPixelBus.h>
 
-// #include <internal/RgbColor.h>
+#define PIN_0 12
+#define PIN_1 14
+#define PIN_2 33
+#define PIN_3 32
 
-#define FIRST_LED_PIN 16
+const int PINS[] = {PIN_0, PIN_1, PIN_2, PIN_3};
+
 #define LED_CHANNEL_COUNT 4
-#define DEFAULT_BRIGHTNESS 8 // 0 to 255
+#define DEFAULT_BRIGHTNESS 255 // 0 to 255
 
 // Used by LEDMatrix
 #define MATRIX_TILE_WIDTH 32 // width of EACH NEOPIXEL MATRIX (not total display)
@@ -25,8 +29,9 @@
 
 const int LED_CHANNEL_WIDTH = MATRIX_SIZE / LED_CHANNEL_COUNT;
 
-// typedef NeoMosaic<ColumnMajorAlternatingTilePreference> Mosaic;
+#define AUTO_MUTEX /*MutexLockRecursive mutex(_impl->xMutex);*/
 
+// typedef NeoMosaic<ColumnMajorAlternatingTilePreference> Mosaic;
 typedef NeoTiles<ColumnMajorAlternating180Layout , RowMajorLayout> Mosaic;
 
 
@@ -47,8 +52,10 @@ public:
    virtual void Setup() = 0;
    virtual void Clear(CRGB rgb)  = 0;
    virtual void SetPixel(uint16_t x, uint16_t y, CRGB color) = 0;
-   virtual void Loop() = 0;
+   virtual void Tick() = 0;
    virtual void SetBrightness(int brightness) = 0;
+
+   virtual void Update() = 0;
 
    virtual void DrawLine(int x1, int y1, int x2, int y2, CRGB col);
    virtual uint16_t Width();
@@ -70,8 +77,10 @@ public:
    void Clear(CRGB rgb);
    void SetPixel(uint16_t x, uint16_t y, CRGB color);
    void SetBrightness(int brigth);
-   void Loop();
+   void Tick();
+   void Update();
 
+   void LoopTask();
 private:
    struct FastLedImpl *_impl;
 };
@@ -86,7 +95,10 @@ public:
    void Clear(CRGB rgb);
    void SetPixel(uint16_t x, uint16_t y, CRGB color);
    void SetBrightness(int brightness);
-   void Loop();
+   void Tick();
+   void Update();
+
+   void LoopTask();
 
 private:
    struct NeoPixelBusImpl * _impl;

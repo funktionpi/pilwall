@@ -6,7 +6,6 @@
 #include <NeoPixelBus.h>
 #include <NeoPixelBrightnessBus.h>
 
-
 void led_show();
 
 DefaultLedLibrary controller;
@@ -14,20 +13,21 @@ DefaultLedLibrary controller;
 void led_setup()
 {
    LOGF("[LED] Matrix Size: %dx%d\n", MATRIX_WIDTH, MATRIX_HEIGHT);
-   LOGF("[LED] Using %d channels with %d pixels\n", LED_CHANNEL_COUNT, LED_CHANNEL_WIDTH);
+   LOGF("[LED] Using %d channels with %d pixels for a total of %d pixels\n", LED_CHANNEL_COUNT, LED_CHANNEL_WIDTH, MATRIX_SIZE);
 
    controller.Setup();
    controller.SetBrightness(DEFAULT_BRIGHTNESS);
+   controller.Clear(0);
 
    LOGLN("[LED] setup done");
 }
 
 void led_show()
 {
-   controller.Loop();
+   controller.Tick();
 }
 
-LedController& LEDs()
+LedController &LEDs()
 {
    return controller;
 }
@@ -39,32 +39,35 @@ CRGB bgCols[] = {CRGB::Red, CRGB::Black, CRGB::Green, CRGB::Black, CRGB::Blue, C
 
 void led_cycle_pixels()
 {
-   controller.Clear(colorToInt(bgCols[col]));
-
-   delay(20);
-
-   auto count = horizontal ? MATRIX_WIDTH : MATRIX_HEIGHT;
-
-   // LOGF("[LED] line %d / %d\n", it, count);
-
-   if (horizontal)
+   EVERY_N_MILLISECONDS(17)
    {
-      controller.DrawLine(it, 0, it, MATRIX_HEIGHT, CRGB::White);
-   }
-   else
-   {
-      controller.DrawLine(0, it, MATRIX_WIDTH, it, CRGB::White);
-   }
+      controller.Clear(colorToInt(bgCols[col]));
 
-   it++;
+      auto count = horizontal ? MATRIX_WIDTH : MATRIX_HEIGHT;
 
-   if (it >= count)
-   {
-      horizontal = !horizontal;
-      it = 0;
+      // LOGF("[LED] line %d / %d\n", it, count);
 
-      col = (col + 1) % (sizeof(bgCols) / sizeof(CRGB));
-      LOGF("[LED] now clearing to (R: %d, G: %d, B: %d)\n", bgCols[col].r, bgCols[col].g, bgCols[col].b);
+      if (horizontal)
+      {
+         controller.DrawLine(it, 0, it, MATRIX_HEIGHT, CRGB::White);
+      }
+      else
+      {
+         controller.DrawLine(0, it, MATRIX_WIDTH, it, CRGB::White);
+      }
+
+      it++;
+
+      if (it >= count)
+      {
+         horizontal = !horizontal;
+         it = 0;
+
+         col = (col + 1) % (sizeof(bgCols) / sizeof(CRGB));
+         LOGF("[LED] now clearing to (R: %d, G: %d, B: %d)\n", bgCols[col].r, bgCols[col].g, bgCols[col].b);
+      }
+
+      controller.Update();
    }
 }
 
@@ -78,11 +81,13 @@ void led_flash_colors()
    // controller.DrawLine(0, 1, MATRIX_WIDTH, 1, bgCols[col]);
 
    col = (col + 1) % (sizeof(bgCols) / sizeof(CRGB));
+
+   controller.Update();
 }
 
 void led_loop()
 {
    // led_cycle_pixels();
    // led_flash_colors();
-   controller.Loop();
+   controller.Tick();
 }

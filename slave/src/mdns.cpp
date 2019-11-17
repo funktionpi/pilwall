@@ -10,21 +10,21 @@
 
 void setup_mdns()
 {
+   LOGLN("[mDNS] initializing mDNS service")
    //initialize mDNS service
-   esp_err_t err = mdns_init();
-   if (err)
-   {
-      printf("[MDNS] Init failed: %d\n", err);
-      return;
-   }
+   ESP_ERROR_CHECK(mdns_init());
 
    //set hostname
-   mdns_hostname_set(BONJOUR_NAME);
-   mdns_instance_name_set("led-slave driver");
+   ESP_ERROR_CHECK(mdns_hostname_set(BONJOUR_NAME));
+   ESP_ERROR_CHECK(mdns_instance_name_set("LED_slave"));
 
-   mdns_service_add(NULL, "_http", "_tcp", 80, NULL, 0);
-   mdns_service_add(NULL, "_ledwall", "_tcp", CTRL_PORT, NULL, 0);
+   // ESP_ERROR_CHECK(mdns_service_add(nullptr, "_http", "_tcp", 80, nullptr, 0));
+   // ESP_ERROR_CHECK(mdns_service_txt_item_set("_http", "_tcp", "path", "/_ac") );
 
-   mdns_service_instance_name_set("_http", "_tcp", "led-slave's Wifi configuration server");
-   mdns_service_instance_name_set("_ledwall", "_tcp", "led-slave's control service");
+   ESP_ERROR_CHECK(mdns_service_add(nullptr, "_leds", "_tcp", CTRL_PORT, nullptr, 0));
+
+   // ESP_ERROR_CHECK(mdns_service_instance_name_set("_http", "_tcp", "LED Slave: Wifi configuration server"));
+   // ESP_ERROR_CHECK(mdns_service_instance_name_set("_ledwall", "_tcp", "LED Slave: control service"));
+
+   LOGLN("[mDNS] mDNS setup done!")
 }

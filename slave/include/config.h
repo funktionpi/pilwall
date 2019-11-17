@@ -4,6 +4,8 @@
 #define HOSTNAME "esp32-01"
 #define BONJOUR_NAME "ledslave"
 
+#define SERIAL_DEBUG
+
 #define CTRL_PORT 9090
 
 #endif

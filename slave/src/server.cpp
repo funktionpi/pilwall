@@ -5,9 +5,20 @@
 #include <pb_decode.h>
 #include <ledctrl.pb.h>
 #include <led.h>
-#include "log.h"
 
 #include "config.h"
+
+// #define DEBUG_NETWORK
+
+#ifdef DEBUG_NETWORK
+  #define LOG(...) Serial.print(__VA_ARGS__);
+  #define LOGLN(...) Serial.println(__VA_ARGS__);
+  #define LOGF(...) Serial.printf(__VA_ARGS__);
+#else
+  #define LOG(...)
+  #define LOGLN(...)
+  #define LOGF(...)
+#endif
 
 AsyncWebServer server(CTRL_PORT);
 AsyncEventSource events("/events");
@@ -20,6 +31,8 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
 {
    if (type == WS_EVT_CONNECT)
    {
+      Serial.printf("[SVR] server running on core %d\n", xPortGetCoreID());
+
       LOGF("[SVR] ws[%s][%u] connect\n", server->url(), client->id());
       client->printf("You are client #%u", client->id());
       client->ping();
@@ -28,6 +41,7 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
    {
       LOGF("[SVR] ws[%s][%u] disconnect:\n", server->url(), client->id());
       LEDs().Clear(0);
+      LEDs().Update();
    }
    else if (type == WS_EVT_ERROR)
    {
@@ -247,6 +261,12 @@ void ws_process_message(uint8_t *data, size_t len, ledctrl_Response &response)
       }
 
       LEDs().SetBrightness(val);
+      break;
+   }
+   case ledctrl_Request_update_tag:
+   {
+      LOGLN("[PB] received an update request");
+      LEDs().Update();
       break;
    }
    }

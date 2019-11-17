@@ -13,7 +13,7 @@ AutoConnectConfig Config;
 
 void rootPage()
 {
-   char content[] = "ESP 32";
+   char content[] = "<meta http-equiv=\"refresh\" content=\"0; url=/_ac\">";
    Server.send(200, "text/plain", content);
 }
 
@@ -23,7 +23,9 @@ void setup_wifi()
    Config.autoReconnect = true;
    Config.hostName = HOSTNAME;
    Config.apid = "ESP32-" + String((uint32_t)(ESP.getEfuseMac() >> 32), HEX);
-   Config.psk = "3.1416";
+   Config.psk = "3.141592";
+   Config.apip = IPAddress(192,168,69,1);
+   Config.gateway = IPAddress(192,168,69,1);
    Portal.config(Config);
 
    Server.on("/", rootPage);
@@ -39,9 +41,5 @@ void setup_wifi()
 
 void wifi_loop()
 {
-   if (!WiFi.isConnected())
-   {
-      // LOGLN("[WIFI] handling client");
-      Portal.handleClient();
-   }
+   Portal.handleClient();
 }

@@ -16,6 +16,7 @@ message Request {
       PixelsRequest pixels = 6;
       DrawLineRequest draw_line = 7;
       DimensionRequest dimension = 8;
+      UpdateRequest update = 9;
    }
 }
 
@@ -71,7 +72,11 @@ message DimensionRequest {
 message EmptyResponse{
 }
 
+message UpdateRequest {
+}
+
 message DimensionResponse {
    int32 width = 1;
    int32 height = 2;
 }
+

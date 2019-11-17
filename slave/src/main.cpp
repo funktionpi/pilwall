@@ -10,10 +10,12 @@
 
 void setup()
 {
-#ifdef DEBUG
+#ifdef SERIAL_DEBUG
    Serial.begin(115200);
 #endif
    LOGLN("[MAIN] Starting esp32 setup");
+
+   LOGF("[MAIN] running setup on core %d\n", xPortGetCoreID());
 
    setup_wifi();
    led_setup();
@@ -28,7 +30,7 @@ void loop()
    wifi_loop();
    led_loop();
 
-#ifdef DEBUG
+#ifdef SERIAL_DEBUG
    EVERY_N_SECONDS(5) {
       auto freeBytes = xPortGetFreeHeapSize();
       LOGF("[MEM] Free memory: %d kB\n", freeBytes / 1024);

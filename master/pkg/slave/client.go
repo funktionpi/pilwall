@@ -115,7 +115,12 @@ func (c *Client) GetDimension() (*DimensionResponse, error) {
 	return pkg.Dimension, nil
 }
 
-func (c *Client) UpdateScreen() {
+func (c *Client) UpdateScreen() error {
+	req := &Request_Update{
+		Update: &UpdateRequest{},
+	}
+	_, err := c.send(req)
+	return err
 }
 
 func (c *Client) DrawLine(x1,y1,x2,y2 int16, rgba color.RGBA) error {
