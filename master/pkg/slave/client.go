@@ -6,6 +6,7 @@ import (
 	"github.com/gorilla/websocket"
 	"image/color"
 	"led-wall/pkg/errors"
+	"net"
 	"net/url"
 	"time"
 )
@@ -13,7 +14,8 @@ import (
 //go:generate protoc -I ../../../slave/lib/proto -I $NANOPB/generator/proto --go_out=. ledctrl.proto
 
 type Client struct {
-	conn *websocket.Conn
+	websock *websocket.Conn
+	udpsock net.Conn
 
 	responses map[int32]*chan *Response
 	next int32;
@@ -21,56 +23,78 @@ type Client struct {
 
 func Connect(url url.URL) (*Client, error) {
 
-	fmt.Printf("connecting to ledslave '%s'\n", url.String())
-	conn, resp, err := websocket.DefaultDialer.Dial(url.String(), nil)
-	if err != nil {
-		return nil, err
+	cl := &Client{
+		responses: make(map[int32]*chan *Response),
+		next:      1,
 	}
 
-	fmt.Printf("websocket response: %v\n", resp.Status)
-
-	channelMap := make(map[int32]*chan *Response)
-
-	cl := &Client{
-		conn: conn,
-		responses: channelMap,
-		next: 1,
+	fmt.Printf("connecting to ledslave '%s'\n", url.String())
+	if url.Scheme == "ws://" {
+		conn, resp, err := websocket.DefaultDialer.Dial(url.String(), nil)
+		if err != nil {
+			return nil, err
+		}
+		fmt.Printf("websocket response: %v\n", resp.Status)
+		cl.websock = conn
+	} else {
+		conn, err := net.DialTimeout("udp", url.Host, time.Second * 3)
+		if err != nil {
+			return nil, err
+		}
+		cl.udpsock = conn
 	}
 
 	go cl.processResponse()
-
 	return cl, nil
 }
 
 func (c *Client) Close() {
-	err := c.conn.Close()
+	var err error
+	if err != nil {
+		err = c.websock.Close()
+	}
+	errors.PrintIfErr(err)
+
+	if c.udpsock != nil {
+		err = c.udpsock.Close()
+	}
 	errors.PrintIfErr(err)
 }
 
 func (c *Client) processResponse() {
 	for {
-		typed, buf, err := c.conn.ReadMessage()
+		var err error
+		buf := []byte{}
+
+		if c.websock != nil {
+			var typed int
+			typed, buf, err = c.websock.ReadMessage()
+			if typed != websocket.BinaryMessage {
+				fmt.Println("received text message: ", string(buf))
+			}
+		} else if c.udpsock != nil {
+			tmp := [128]byte{}
+			size := 0
+			size, err = c.udpsock.Read(tmp[0:])
+			buf = tmp[0:size]
+		}
 
 		if err != nil {
 			errors.PrintIfErr(err)
 			continue
 		}
 
-		if typed == websocket.BinaryMessage {
-			resp := Response{}
-			err = proto.Unmarshal(buf, &resp)
-			if err != nil {
-				errors.PrintIfErr(err)
-			} else {
-				if ch, ok := c.responses[resp.Id]; ok {
-					*ch <- &resp
-					delete(c.responses, resp.Id)
-				} else {
-					fmt.Printf("could not find channel for request %d\n", resp.Id)
-				}
-			}
+		resp := Response{}
+		err = proto.Unmarshal(buf, &resp)
+		if err != nil {
+			errors.PrintIfErr(err)
 		} else {
-			fmt.Println("received text message: ", string(buf))
+			if ch, ok := c.responses[resp.Id]; ok {
+				*ch <- &resp
+				delete(c.responses, resp.Id)
+			} else {
+				fmt.Printf("could not find channel for request %d\n", resp.Id)
+			}
 		}
 	}
 }
@@ -154,7 +178,11 @@ func (c *Client) send(req isRequest_Request) (*Response, error) {
 		return nil, err
 	}
 
-	err = c.conn.WriteMessage(websocket.BinaryMessage, buf)
+	if c.websock != nil {
+		err = c.websock.WriteMessage(websocket.BinaryMessage, buf)
+	} else if c.udpsock != nil {
+		_, err = c.udpsock.Write(buf)
+	}
 	if err != nil {
 	  return nil, err
   }

@@ -6,7 +6,6 @@
 #include "config.h"
 #include "log.h"
 
-
 WebServer Server;
 AutoConnect Portal(Server);
 AutoConnectConfig Config;

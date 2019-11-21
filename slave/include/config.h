@@ -7,5 +7,6 @@
 #define SERIAL_DEBUG
 
 #define CTRL_PORT 9090
+#define UDP_PORT 1234
 
 #endif

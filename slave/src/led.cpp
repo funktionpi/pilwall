@@ -18,6 +18,7 @@ void led_setup()
    controller.Setup();
    controller.SetBrightness(DEFAULT_BRIGHTNESS);
    controller.Clear(0);
+   controller.Update();
 
    LOGLN("[LED] setup done");
 }
@@ -39,8 +40,9 @@ CRGB bgCols[] = {CRGB::Red, CRGB::Black, CRGB::Green, CRGB::Black, CRGB::Blue, C
 
 void led_cycle_pixels()
 {
-   EVERY_N_MILLISECONDS(17)
+   EVERY_N_MILLISECONDS(5)
    {
+      controller.Lock();
       controller.Clear(colorToInt(bgCols[col]));
 
       auto count = horizontal ? MATRIX_WIDTH : MATRIX_HEIGHT;
@@ -64,9 +66,10 @@ void led_cycle_pixels()
          it = 0;
 
          col = (col + 1) % (sizeof(bgCols) / sizeof(CRGB));
-         LOGF("[LED] now clearing to (R: %d, G: %d, B: %d)\n", bgCols[col].r, bgCols[col].g, bgCols[col].b);
+         // LOGF("[LED] now clearing to (R: %d, G: %d, B: %d)\n", bgCols[col].r, bgCols[col].g, bgCols[col].b);
       }
 
+      controller.Unlock();
       controller.Update();
    }
 }

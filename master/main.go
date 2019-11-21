@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/grandcat/zeroconf"
-	"github.com/micro/mdns"
+	"github.com/oleksandr/bonjour"
 	"image/color"
 	"led-wall/pkg/errors"
 	"led-wall/pkg/slave"
@@ -33,7 +33,7 @@ func main() {
 	var dnses []DnsEntry
 
 	for len(dnses) == 0 {
-		dnses = Lookup()
+		dnses = LookupZeroconf()
 	}
 
 	svr := dnses[0]
@@ -44,17 +44,19 @@ func main() {
 	//}
 
 	//addr := fmt.Sprintf("ws://%s:%d", svr.Addr.String(), svr.Port)
-	u := url.URL{
-		Scheme: "ws",
-		Host:   fmt.Sprintf("%v:%d", svr.IP, svr.Port),
-		Path:   "/ws",
-	}
+	//u := url.URL{
+	//	Scheme: "ws",
+	//	Host:   fmt.Sprintf("%v:%d", svr.IP, svr.Port),
+	//	Path:   "/ws",
+	//}
+
+	u := url.URL{Host: fmt.Sprintf("%v:%d", svr.IP, 1234)}
 
 	client, err := slave.Connect(u)
 	errors.ExitIfErr(err)
 	defer client.Close()
 
-	err = client.SetBrightness(128)
+	err = client.SetBrightness(4)
 	errors.ExitIfErr(err)
 
 	dimension, err := client.GetDimension()
@@ -62,8 +64,8 @@ func main() {
 
 	fmt.Printf("screen dimension is %dx%d", dimension.Width, dimension.Height)
 
-	scrobe(client)
-	//scanLines(client, dimension)
+	//scrobe(client)
+	scanLines(client, dimension)
 
 	//WaitForCtrlC()
 }
@@ -106,11 +108,13 @@ func scanLines(client *slave.Client, dimension *slave.DimensionResponse) {
 
 		err = client.UpdateScreen()
 		errors.PrintIfErr(err)
+
+		//time.Sleep(time.Second / 10)
 	}
 }
 
 func scrobe(client *slave.Client) {
-	colors := []color.RGBA{Black, White}
+	colors := []color.RGBA{Black, White, Black, Red, Black, Blue, Black, Green}
 
 	idx := 0
 	for {
@@ -122,7 +126,7 @@ func scrobe(client *slave.Client) {
 		err = client.UpdateScreen()
 		errors.PrintIfErr(err)
 
-		time.Sleep(time.Millisecond * 17)
+		//time.Sleep(time.Millisecond * 17)
 	}
 }
 
@@ -145,35 +149,40 @@ type DnsEntry struct {
 	Port     int
 }
 
-func Lookup() []DnsEntry {
+func LookupMDNS() []DnsEntry {
 
-	println("doing a mdns lookup for aurora devices")
+	println("doing a mdns lookup for led devices")
 
-	// Make a channel for results and start listening
-	entriesCh := make(chan *mdns.ServiceEntry, 4)
+	resolver, err := bonjour.NewResolver(nil)
+	if err != nil {
+		log.Println("Failed to initialize resolver:", err.Error())
+		os.Exit(1)
+	}
 
-	var dnss []DnsEntry
+	results := make(chan *bonjour.ServiceEntry, 8)
 
-	wait := sync.WaitGroup{}
-	go func() {
-		wait.Add(1)
-		for entry := range entriesCh {
-			dnss = append(dnss, DnsEntry{
-				IP:       entry.AddrV4,
-				Port:     entry.Port,
-				Id:       field(entry.InfoFields, "id"),
-			})
+	go func(results chan *bonjour.ServiceEntry, exitCh chan<- bool) {
+		for e := range results {
+			log.Printf("%s", e.Instance)
+			exitCh <- true
+			time.Sleep(1e9)
+			os.Exit(0)
 		}
-		wait.Done()
-	}()
+	}(results, resolver.Exit)
 
-	// Start the lookup
-	err := mdns.Lookup("_leds._tcp", entriesCh)
-	errors.PrintIfErr(err)
-	close(entriesCh)
-	wait.Wait()
+	err = resolver.Browse("_leds._tcp", "local.", results)
+	if err != nil {
+		log.Println("Failed to browse:", err.Error())
+	}
 
-	fmt.Printf("found %d devices\n", len(dnss))
+	dnss := []DnsEntry{}
+	for e := range results {
+		dnss = append(dnss, DnsEntry{
+			Id:   e.HostName,
+			IP:   e.AddrIPv4,
+			Port: e.Port,
+		})
+	}
 
 	return dnss
 }
@@ -189,36 +198,54 @@ func field(fields []string, name string) string {
 	return ""
 }
 
-func search_dns() *zeroconf.ServiceEntry {
+func LookupZeroconf() []DnsEntry {
+
 	// Discover all services on the network (e.g. _workstation._tcp)
-	resolver, err := zeroconf.NewResolver(nil)
+	resolver, err := zeroconf.NewResolver(zeroconf.SelectIPTraffic(zeroconf.IPv4))
 	if err != nil {
-		log.Fatalln("Failed to initialize resolver:", err.Error())
+		errors.ExitIfErr(err)
+		//log.Fatalln("Failed to initialize resolver:", err.Error())
 	}
 
-	var serv *zeroconf.ServiceEntry
+	dnss := []DnsEntry{}
+
 	entries := make(chan *zeroconf.ServiceEntry)
 	go func(results <-chan *zeroconf.ServiceEntry) {
 		for entry := range results {
-			log.Println(entry)
-			serv = entry
+			dnss = append(dnss, DnsEntry{
+				Id:   entry.HostName,
+				IP:   entry.AddrIPv4[0],
+				Port: entry.Port,
+			})
+			fmt.Printf("found '%s' @ '%s:%d'\n", entry.HostName, entry.AddrIPv4[0], entry.Port)
 		}
-		log.Println("No more entries.")
 	}(entries)
 
-	//ctx, cancel := context.WithTimeout(context.Background(), time.Second * 10)
-	//defer cancel()
-	err = resolver.Browse(context.Background(), "_leds._tcp", "local", entries)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+	defer cancel()
+	err = resolver.Browse(ctx, "_leds._tcp", "", entries)
+	errors.ExitIfErr(err)
+
+	<-ctx.Done()
+
+	return dnss
+}
+
+func listInterfaces() []net.Interface {
+	var interfaces []net.Interface
+	ifaces, err := net.Interfaces()
 	if err != nil {
-		log.Fatalln("Failed to browse:", err.Error())
+		return nil
+	}
+	for _, ifi := range ifaces {
+		if (ifi.Flags & net.FlagUp) == 0 {
+			continue
+		}
+
+		if (ifi.Flags & net.FlagMulticast) > 0 && (ifi.Name == "Ethernet" || ifi.Name == "Wi-Fi") {
+			interfaces = append(interfaces, ifi)
+		}
 	}
 
-	//<-ctx.Done()
-	// Wait some additional time to see debug messages on go routine shutdown.
-
-	for serv == nil {
-		time.Sleep(time.Millisecond * 100)
-	}
-
-	return serv
+	return interfaces
 }

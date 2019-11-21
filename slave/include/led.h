@@ -2,18 +2,21 @@
 #define _LED_H_
 
 #include <Arduino.h>
+
+#undef FASTLED_HAS_PRAGMA_MESSAGE
 #include <FastLED.h>
+
 #include <NeoPixelBus.h>
 
-#define PIN_0 12
-#define PIN_1 14
+#define PIN_0 4
+#define PIN_1 19
 #define PIN_2 33
 #define PIN_3 32
 
 const int PINS[] = {PIN_0, PIN_1, PIN_2, PIN_3};
 
 #define LED_CHANNEL_COUNT 4
-#define DEFAULT_BRIGHTNESS 255 // 0 to 255
+#define DEFAULT_BRIGHTNESS 64 // 0 to 255
 
 // Used by LEDMatrix
 #define MATRIX_TILE_WIDTH 32 // width of EACH NEOPIXEL MATRIX (not total display)
@@ -32,8 +35,7 @@ const int LED_CHANNEL_WIDTH = MATRIX_SIZE / LED_CHANNEL_COUNT;
 #define AUTO_MUTEX /*MutexLockRecursive mutex(_impl->xMutex);*/
 
 // typedef NeoMosaic<ColumnMajorAlternatingTilePreference> Mosaic;
-typedef NeoTiles<ColumnMajorAlternating180Layout , RowMajorLayout> Mosaic;
-
+typedef NeoTiles<ColumnMajorAlternatingLayout , RowMajorLayout> Mosaic;
 
 void led_setup();
 void led_loop();
@@ -56,6 +58,9 @@ public:
    virtual void SetBrightness(int brightness) = 0;
 
    virtual void Update() = 0;
+
+   virtual void Lock() = 0;
+   virtual void Unlock() = 0;
 
    virtual void DrawLine(int x1, int y1, int x2, int y2, CRGB col);
    virtual uint16_t Width();
@@ -80,7 +85,10 @@ public:
    void Tick();
    void Update();
 
-   void LoopTask();
+   void Lock();
+   void Unlock();
+
+   void Task();
 private:
    struct FastLedImpl *_impl;
 };
@@ -97,6 +105,9 @@ public:
    void SetBrightness(int brightness);
    void Tick();
    void Update();
+
+   void Lock();
+   void Unlock();
 
    void LoopTask();
 

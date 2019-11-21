@@ -20,7 +20,9 @@ void setup()
    setup_wifi();
    led_setup();
    setup_mdns();
-   setup_server();
+   setup_websocket();
+   setup_udp();
+   setup_artnet();
 
    LOGLN("[MAIN] Setup done");
 }
@@ -28,6 +30,7 @@ void setup()
 void loop()
 {
    wifi_loop();
+   artnet_loop();
    led_loop();
 
 #ifdef SERIAL_DEBUG

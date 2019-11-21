@@ -57,7 +57,6 @@ void NeoPixelBusController::Setup()
    }
 
    _impl->xMutex = xSemaphoreCreateMutex();
-   xTaskCreatePinnedToCore(NeoPixelshowTask, "NeoPixelshowTask", 10000, this, 2, &NeoPixelshowTaskHandle, NEOPIXEL_SHOW_CORE);
 
    LOGLN("[LED] NeoPixel setup done")
 }
@@ -65,50 +64,16 @@ void NeoPixelBusController::Setup()
 void NeoPixelBusController::Update()
 {
    _impl->strip0->Show();
-   if (_impl->strip1) _impl->strip1->Show();
-   if (_impl->strip2) _impl->strip2->Show();
-   if (_impl->strip3) _impl->strip3->Show();
+   if (_impl->strip1)
+      _impl->strip1->Show();
+   if (_impl->strip2)
+      _impl->strip2->Show();
+   if (_impl->strip3)
+      _impl->strip3->Show();
 }
 
 void NeoPixelBusController::Tick()
 {
-   //  if (neopTaskHandle == 0)
-   // {
-   //    // -- Store the handle of the current task, so that the show task can
-   //    //    notify it when it's done
-   //    neopTaskHandle = xTaskGetCurrentTaskHandle();
-
-   //    // -- Trigger the show task
-   //    xTaskNotifyGive(NeoPixelshowTaskHandle);
-
-   //    // -- Wait to be notified that it's done
-   //    const TickType_t xMaxBlockTime = pdMS_TO_TICKS(200);
-   //    ulTaskNotifyTake(pdTRUE, xMaxBlockTime);
-   //    neopTaskHandle = 0;
-   // }
-
-   // _impl->strip0->Show();
-   // if (_impl->strip1) _impl->strip1->Show();
-   // if (_impl->strip2) _impl->strip2->Show();
-   // if (_impl->strip3) _impl->strip3->Show();
-}
-
-void NeoPixelBusController::LoopTask()
-{
-   // -- Run forever...
-   for (;;)
-   {
-      // -- Wait for the trigger
-      // ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-
-      // -- Do the show (synchronously) at MAX 60 fps
-      // EVERY_N_MILLISECONDS(17)
-      {
-      }
-
-      // -- Notify the calling task
-      // xTaskNotifyGive(neopTaskHandle);
-   }
 }
 
 RgbColor adjustColor(int brightness, CRGB _color)
@@ -150,23 +115,24 @@ void NeoPixelBusController::SetPixel(uint16_t x, uint16_t y, CRGB _color)
 
 void NeoPixelBusController::Clear(CRGB _color)
 {
-   // if (xSemaphoreTake(_impl->xMutex, portMAX_DELAY))
-   {
-      // CRGB tmp(_color);
-      // LOGF("[LED] now clearing to (R: %d, G: %d, B: %d)\n", tmp.r, tmp.g, tmp.b);
+   auto color = adjustColor(_impl->strip0->GetBrightness(), _color);
+   _impl->strip0->ClearTo(color);
+   if (_impl->strip1)
+      _impl->strip1->ClearTo(color);
+   if (_impl->strip2)
+      _impl->strip2->ClearTo(color);
+   if (_impl->strip3)
+      _impl->strip3->ClearTo(color);
+}
 
-      auto color = adjustColor(_impl->strip0->GetBrightness(), _color);
+void NeoPixelBusController::Lock()
+{
+   xSemaphoreTake(_impl->xMutex, portMAX_DELAY);
+}
 
-      _impl->strip0->ClearTo(color);
-      if (_impl->strip1)
-         _impl->strip1->ClearTo(color);
-      if (_impl->strip2)
-         _impl->strip2->ClearTo(color);
-      if (_impl->strip3)
-         _impl->strip3->ClearTo(color);
-
-      // xSemaphoreGive(_impl->xMutex);
-   }
+void NeoPixelBusController::Unlock()
+{
+   xSemaphoreGive(_impl->xMutex);
 }
 
 void NeoPixelBusController::SetBrightness(int brightness)
