@@ -85,7 +85,7 @@ void FastLedController::Setup()
    // -- Create the FastLED show task
    xTaskCreatePinnedToCore(FastLEDshowTask, "FastLEDshowTask", 2048, this, 2, &_impl->FastLEDshowTaskHandle, FASTLED_SHOW_CORE);
 
-   // FastLED.setMaxRefreshRate(45, false);
+   FastLED.setMaxRefreshRate(60, false);
 
    LOGLN("[FLED] FastLED setup done")
 }
@@ -118,12 +118,6 @@ void FastLedController::SetPixel(uint16_t x, uint16_t y, CRGB color)
 
 void FastLedController::Tick()
 {
-   if (_impl->firstTick)
-   {
-      _impl->firstTick = false;
-      LOGF("[FLED] running FastLED tick on core %d\n", xPortGetCoreID());
-   }
-
 #ifdef SERIAL_DEBUG
    EVERY_N_SECONDS(5)
    {

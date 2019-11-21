@@ -29,7 +29,7 @@ func Connect(url url.URL) (*Client, error) {
 	}
 
 	fmt.Printf("connecting to ledslave '%s'\n", url.String())
-	if url.Scheme == "ws://" {
+	if url.Scheme == "ws" {
 		conn, resp, err := websocket.DefaultDialer.Dial(url.String(), nil)
 		if err != nil {
 			return nil, err

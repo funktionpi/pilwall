@@ -1,8 +1,6 @@
 #include <ESPAsyncWebServer.h>
-// #include <internal/RgbColor.h>
 
 #include <pb_encode.h>
-#include <pb_decode.h>
 #include <ledctrl.pb.h>
 #include <led.h>
 
@@ -10,7 +8,6 @@
 #include "processor.h"
 
 // #define DEBUG_NETWORK
-
 #ifdef DEBUG_NETWORK
   #define LOG(...) Serial.print(__VA_ARGS__);
   #define LOGLN(...) Serial.println(__VA_ARGS__);

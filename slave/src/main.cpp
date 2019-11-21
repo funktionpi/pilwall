@@ -27,8 +27,16 @@ void setup()
    LOGLN("[MAIN] Setup done");
 }
 
+bool mainFirstTick = true;
+
 void loop()
 {
+   if (mainFirstTick)
+   {
+      mainFirstTick = false;
+      LOGF("[MAIN] running tick on core %d\n", xPortGetCoreID());
+   }
+
    wifi_loop();
    artnet_loop();
    led_loop();

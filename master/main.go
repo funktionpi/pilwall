@@ -43,13 +43,11 @@ func main() {
 	//	os.Exit(1)
 	//}
 
-	//addr := fmt.Sprintf("ws://%s:%d", svr.Addr.String(), svr.Port)
 	//u := url.URL{
 	//	Scheme: "ws",
 	//	Host:   fmt.Sprintf("%v:%d", svr.IP, svr.Port),
 	//	Path:   "/ws",
 	//}
-
 	u := url.URL{Host: fmt.Sprintf("%v:%d", svr.IP, 1234)}
 
 	client, err := slave.Connect(u)
@@ -62,7 +60,7 @@ func main() {
 	dimension, err := client.GetDimension()
 	errors.ExitIfErr(err)
 
-	fmt.Printf("screen dimension is %dx%d", dimension.Width, dimension.Height)
+	fmt.Printf("screen dimension is %dx%d\n", dimension.Width, dimension.Height)
 
 	//scrobe(client)
 	scanLines(client, dimension)
