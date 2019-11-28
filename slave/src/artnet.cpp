@@ -2,9 +2,20 @@
 #include <ArtnetWifi.h>
 #include <WiFiUdp.h>
 
+#include "led_controller.h"
 #include "log.h"
 #include "config.h"
 #include "led.h"
+
+#ifndef DEBUG_DMX
+   #undef LOG
+   #undef LOGLN
+   #undef LOGF
+   #define LOG(...)
+   #define LOGLN(...)
+   #define LOGF(...)
+#endif
+
 
 ArtnetWifi artnet;
 const int startUniverse = 1;
@@ -76,7 +87,7 @@ void setup_artnet()
    LOGF("[DMX] Artnet setup done.\n");
 }
 
-void artnet_loop()
+void artnet_tick()
 {
    artnet.read();
 }

@@ -1,16 +1,34 @@
-#include "WiFi.h"
+#include <Arduino.h>
 #include <AsyncUDP.h>
+
+#include "led_controller.h"
 
 #include <pb_encode.h>
 #include <pb_decode.h>
 #include <ledctrl.pb.h>
 
 #include "log.h"
-#include "processor.h"
+#include "cmd_processor.h"
 
-AsyncUDP udp;
+#ifndef DEBUG_UDP
+   #undef DLOG
+   #undef DLOGLN
+   #undef DLOGF
+   #define DLOG(...)
+   #define DLOGLN(...)
+   #define DLOGF(...)
+#endif
+
+AsyncUDP udp_cmd;
 
 bool firstUdpPacket = true;
+
+class udp_packet_data {
+public:
+   uint16_t index;
+   uint8_t count; // number of LEDs (not the size of the buffer)
+   uint8_t *colors;
+};
 
 void on_udp_packet(AsyncUDPPacket packet)
 {
@@ -18,51 +36,34 @@ void on_udp_packet(AsyncUDPPacket packet)
    {
       firstUdpPacket = false;
       LOGF("[UDP] running UDP callback on core %d\n", xPortGetCoreID());
+
+      if (xPortInIsrContext())
+      {
+         LOGLN("[UDP] executing from interupt context")
+      }
    }
 
-   // LOG("[UDP] Packet Type: ");
-   // LOG(packet.isBroadcast() ? "Broadcast" : packet.isMulticast() ? "Multicast" : "Unicast");
-   // LOG(", From: ");
-   // LOG(packet.remoteIP());
-   // LOG(":");
-   // LOG(packet.remotePort());
-   // LOG(", To: ");
-   // LOG(packet.localIP());
-   // LOG(":");
-   // LOG(packet.localPort());
-   // LOG(", Length: ");
-   // LOG(packet.length());
-   // LOGLN();
+   DLOGF("[UDP] received UDP packet, size: %d\n", packet.length());
 
-   ledctrl_Response response = ledctrl_Response_init_default;
-   process_message(packet.data(), packet.length(), response);
+   ledctrl_Response response;
+   process_message((uint8_t*)packet.data(), packet.length(), response);
 
-   //reply to the client
-   pb_byte_t buf[128] = {0};
-   auto ostream = pb_ostream_from_buffer(buf, sizeof(buf));
-   if (!pb_encode(&ostream, ledctrl_Response_fields, &response))
+   uint8_t buf[128] = {0};
+   auto outlen = encode_response(response, buf, sizeof(buf));
+
+   if (outlen > 0)
    {
-      LOGF("[UDP] Could not encode response for request %d\n", response.id);
-      return;
+      packet.write(buf, outlen);
    }
-
-   size_t buflen;
-   if (!pb_get_encoded_size(&buflen, ledctrl_Response_fields, &response))
-   {
-      LOGF("[UDP] Could not compute reponse size for request %d\n", response.id);
-      return;
-   }
-
-   packet.write(buf, buflen);
 }
 
 void setup_udp()
 {
-   LOGLN("[UDP] Setting up udp listener")
+   LOGF("[UDP] Setting up udp listener on port %d\n", UDP_PORT)
 
-   if (udp.listen(UDP_PORT))
+   if (udp_cmd.listen(UDP_PORT))
    {
-      LOGLN("[UDP] Listening for udp connection")
-      udp.onPacket(on_udp_packet);
+      LOGLN("[UDP] raw socket open")
+      udp_cmd.onPacket(on_udp_packet);
    }
 }

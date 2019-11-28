@@ -1,4 +1,4 @@
-#include "led.h"
+#include "led_controller.h"
 
 LedController::LedController()
 : mosaic(MATRIX_TILE_WIDTH, MATRIX_TILE_HEIGHT, MATRIX_TILE_H, MATRIX_TILE_V)

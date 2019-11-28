@@ -1,16 +1,13 @@
 #include "led.h"
+#include "led_controller.h"
 #include "log.h"
 
-#include <Print.h>
-
-#include <NeoPixelBus.h>
-#include <NeoPixelBrightnessBus.h>
-
-void led_show();
+// #include <NeoPixelBus.h>
+// #include <NeoPixelBrightnessBus.h>
 
 DefaultLedLibrary controller;
 
-void led_setup()
+void setup_led()
 {
    LOGF("[LED] Matrix Size: %dx%d\n", MATRIX_WIDTH, MATRIX_HEIGHT);
    LOGF("[LED] Using %d channels with %d pixels for a total of %d pixels\n", LED_CHANNEL_COUNT, LED_CHANNEL_WIDTH, MATRIX_SIZE);
@@ -23,12 +20,7 @@ void led_setup()
    LOGLN("[LED] setup done");
 }
 
-void led_show()
-{
-   controller.Tick();
-}
-
-LedController &LEDs()
+LedController& LEDs()
 {
    return controller;
 }
@@ -88,7 +80,7 @@ void led_flash_colors()
    controller.Update();
 }
 
-void led_loop()
+void led_tick()
 {
    // led_cycle_pixels();
    // led_flash_colors();

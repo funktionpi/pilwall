@@ -53,5 +53,9 @@
         "cinttypes": "cpp",
         "utility": "cpp",
         "typeinfo": "cpp"
-    }
+    },
+    "files.exclude": {
+        ".pio/build": true
+    },
+    "workbench.editor.openPositioning": "last"
 }

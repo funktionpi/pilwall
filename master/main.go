@@ -3,10 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/grandcat/zeroconf"
-	"github.com/oleksandr/bonjour"
-	"image/color"
+	"github.com/fogleman/gg"
+	"github.com/golang/protobuf/proto"
+	"image"
+	"image/gif"
+	"led-wall/pkg/color"
 	"led-wall/pkg/errors"
+	"led-wall/pkg/layout"
 	"led-wall/pkg/slave"
 	"log"
 	"net"
@@ -16,15 +19,20 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/grandcat/zeroconf"
+	"github.com/oleksandr/bonjour"
 )
 
-var (
-	White = color.RGBA{255, 255, 255, 255}
-	Black = color.RGBA{}
-	Red   = color.RGBA{R: 255}
-	Blue  = color.RGBA{B: 255}
-	Green = color.RGBA{G: 255}
-)
+var mosaic = layout.Mosaic{
+	TileSize: image.Pt(2,2),
+	TileTopo: layout.RowMajorLayout,
+	PanelTopo: layout.Topology{
+		Width:  32,
+		Height: 8,
+		Layout: layout.ColumnMajorAlternatingLayout,
+	},
+}
 
 func main() {
 
@@ -48,13 +56,13 @@ func main() {
 	//	Host:   fmt.Sprintf("%v:%d", svr.IP, svr.Port),
 	//	Path:   "/ws",
 	//}
-	u := url.URL{Host: fmt.Sprintf("%v:%d", svr.IP, 1234)}
+	u := url.URL{Host: svr.IP.String()}
 
-	client, err := slave.Connect(u)
+	client, err := slave.ConnectProto(u)
 	errors.ExitIfErr(err)
 	defer client.Close()
 
-	err = client.SetBrightness(4)
+	err = client.SetBrightness(16)
 	errors.ExitIfErr(err)
 
 	dimension, err := client.GetDimension()
@@ -63,16 +71,102 @@ func main() {
 	fmt.Printf("screen dimension is %dx%d\n", dimension.Width, dimension.Height)
 
 	//scrobe(client)
-	scanLines(client, dimension)
+	//scanLines(client, dimension)
+	playGif(client, dimension)
+	//drawTest(client, dimension)
+	//drawHue(client)
 
 	//WaitForCtrlC()
 }
 
-func scanLines(client *slave.Client, dimension *slave.DimensionResponse) {
-	colors := []color.RGBA{
-		{R: 255},
-		{G: 255},
-		{B: 255},
+func drawHue(client *slave.ProtoClient) {
+	hue := color.Red.HSL()
+
+	for {
+		hue.H = (hue.H + 1) % 255
+		client.Clear(hue)
+		client.UpdateScreen()
+		time.Sleep(time.Second / 20)
+	}
+
+}
+
+func drawTest(client *slave.ProtoClient, dimension *slave.DimensionResponse) {
+	err := client.Clear(color.Green)
+	errors.PrintIfErr(err)
+
+	//w, h := int(dimension.Width), int(dimension.Height)
+	////fw, fh := float64(w), float64(h)
+	//
+	//ctx := gg.NewContext(w,h)
+	//
+	//ctx.SetColor(color.Green)
+	//ctx.SetPixel(0,0)
+	//
+	//ctx.SetColor(color.Blue)
+	//ctx.SetPixel(w-1, 0)
+	//
+	//ctx.SetColor(color.Cyan)
+	//ctx.SetPixel(0,h-1)
+	//
+	//ctx.SetColor(color.Red)
+	//ctx.SetPixel(w-1, h-1)
+	//
+	//err = client.DrawImg(ctx.Image())
+	//errors.PrintIfErr(err)
+
+	err = client.UpdateScreen()
+	errors.PrintIfErr(err)
+
+	WaitForCtrlC()
+}
+
+func playGif(client slave.Client, dimension *slave.DimensionResponse) {
+
+	fh, err := os.Open("gif/blocks1.gif")
+	errors.ExitIfErr(err)
+
+	anim, err := gif.DecodeAll(fh)
+	errors.ExitIfErr(err)
+
+	err = client.Clear(color.Black)
+	errors.PrintIfErr(err)
+
+	w := int(dimension.Width)
+	h := int(dimension.Height)
+
+	ctx := gg.NewContext(w, h)
+
+	for {
+		for i, gifImg := range anim.Image {
+
+			//println("color model:", reflect.TypeOf(gifImg.ColorModel()).Name())
+
+			ctx.DrawImage(gifImg, 0,0)
+			//ctx.SavePNG(fmt.Sprintf("test%d.png", i))
+
+			delay := anim.Delay[i]
+			proto.Int(delay)
+			//ch := time.After(time.Duration(delay) * time.Second / 100)
+
+			err = client.DrawImg(ctx.Image())
+			//err = client.DrawImgRaw(ctx.Image(), mosaic)
+			errors.PrintIfErr(err)
+
+			err = client.UpdateScreen()
+			//errors.PrintIfErr(err)
+
+			//<-ch
+			time.Sleep(time.Millisecond * 1)
+		}
+	}
+}
+
+func scanLines(client slave.Client, dimension *slave.DimensionResponse) {
+	colors := []color.Color{
+		color.Red,
+		color.Green,
+		color.Blue,
 	}
 
 	horizontal := true
@@ -89,10 +183,10 @@ func scanLines(client *slave.Client, dimension *slave.DimensionResponse) {
 		}
 
 		if horizontal {
-			err = client.DrawLine(it, 0, it, int16(dimension.Height), White)
+			err = client.DrawLine(it, 0, it, int16(dimension.Height), color.White)
 			errors.PrintIfErr(err)
 		} else {
-			err = client.DrawLine(0, it, int16(dimension.Width), it, White)
+			err = client.DrawLine(0, it, int16(dimension.Width), it, color.White)
 			errors.PrintIfErr(err)
 		}
 
@@ -111,8 +205,8 @@ func scanLines(client *slave.Client, dimension *slave.DimensionResponse) {
 	}
 }
 
-func scrobe(client *slave.Client) {
-	colors := []color.RGBA{Black, White, Black, Red, Black, Blue, Black, Green}
+func scrobe(client slave.Client) {
+	colors := []color.Color{color.Black, color.White, color.Black, color.Red, color.Black, color.Blue, color.Black, color.Green}
 
 	idx := 0
 	for {
@@ -142,9 +236,9 @@ func WaitForCtrlC() {
 }
 
 type DnsEntry struct {
-	Id       string
-	IP       net.IP
-	Port     int
+	Id   string
+	IP   net.IP
+	Port int
 }
 
 func LookupMDNS() []DnsEntry {
@@ -184,7 +278,6 @@ func LookupMDNS() []DnsEntry {
 
 	return dnss
 }
-
 
 func field(fields []string, name string) string {
 	for _, field := range fields {
@@ -240,7 +333,7 @@ func listInterfaces() []net.Interface {
 			continue
 		}
 
-		if (ifi.Flags & net.FlagMulticast) > 0 && (ifi.Name == "Ethernet" || ifi.Name == "Wi-Fi") {
+		if (ifi.Flags&net.FlagMulticast) > 0 && (ifi.Name == "Ethernet" || ifi.Name == "Wi-Fi") {
 			interfaces = append(interfaces, ifi)
 		}
 	}

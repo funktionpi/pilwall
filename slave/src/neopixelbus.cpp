@@ -1,6 +1,5 @@
-#include "led.h"
+#include "led_controller.h"
 #include "log.h"
-#include "mutex.h"
 
 #include <NeoPixelBrightnessBus.h>
 
@@ -64,16 +63,14 @@ void NeoPixelBusController::Setup()
 void NeoPixelBusController::Update()
 {
    _impl->strip0->Show();
-   if (_impl->strip1)
-      _impl->strip1->Show();
-   if (_impl->strip2)
-      _impl->strip2->Show();
-   if (_impl->strip3)
-      _impl->strip3->Show();
+   if (_impl->strip1) _impl->strip1->Show();
+   if (_impl->strip2) _impl->strip2->Show();
+   if (_impl->strip3) _impl->strip3->Show();
 }
 
 void NeoPixelBusController::Tick()
 {
+   // TODO
 }
 
 RgbColor adjustColor(int brightness, CRGB _color)
@@ -93,24 +90,20 @@ RgbColor adjustColor(int brightness, CRGB _color)
 
 void NeoPixelBusController::SetPixel(uint16_t x, uint16_t y, CRGB _color)
 {
-   if (xSemaphoreTake(_impl->xMutex, portMAX_DELAY))
-   {
-      auto color = adjustColor(_impl->strip0->GetBrightness(), _color);
-      auto idx = mosaic.Map(x, y);
-      auto stripId = idx / LED_CHANNEL_WIDTH;
-      idx = idx % LED_CHANNEL_WIDTH;
+   auto color = adjustColor(_impl->strip0->GetBrightness(), _color);
+   auto idx = mosaic.Map(x, y);
+   auto stripId = idx / LED_CHANNEL_WIDTH;
+   idx = idx % LED_CHANNEL_WIDTH;
 
-      if (stripId == 0)
-         _impl->strip0->SetPixelColor(idx, color);
-      else if (stripId == 1)
-         _impl->strip1->SetPixelColor(idx, color);
-      else if (stripId == 2)
-         _impl->strip2->SetPixelColor(idx, color);
-      else if (stripId == 3)
-         _impl->strip3->SetPixelColor(idx, color);
+   if (stripId == 0) _impl->strip0->SetPixelColor(idx, color);
+   else if (stripId == 1) _impl->strip1->SetPixelColor(idx, color);
+   else if (stripId == 2) _impl->strip2->SetPixelColor(idx, color);
+   else if (stripId == 3) _impl->strip3->SetPixelColor(idx, color);
+}
 
-      xSemaphoreGive(_impl->xMutex);
-   }
+void NeoPixelBusController::CopyRaw(int index, const char *src, int len)
+{
+
 }
 
 void NeoPixelBusController::Clear(CRGB _color)
@@ -137,18 +130,10 @@ void NeoPixelBusController::Unlock()
 
 void NeoPixelBusController::SetBrightness(int brightness)
 {
-   // if (xSemaphoreTake(_impl->xMutex, portMAX_DELAY))
-   {
-      _impl->strip0->SetBrightness(brightness);
-      if (_impl->strip1)
-         _impl->strip1->SetBrightness(brightness);
-      if (_impl->strip2)
-         _impl->strip2->SetBrightness(brightness);
-      if (_impl->strip3)
-         _impl->strip3->SetBrightness(brightness);
-
-      // xSemaphoreGive(_impl->xMutex);
-   }
+   _impl->strip0->SetBrightness(brightness);
+   if (_impl->strip1) _impl->strip1->SetBrightness(brightness);
+   if (_impl->strip2) _impl->strip2->SetBrightness(brightness);
+   if (_impl->strip3) _impl->strip3->SetBrightness(brightness);
 }
 
 /** show Task

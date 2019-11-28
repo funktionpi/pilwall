@@ -1,49 +1,27 @@
-#ifndef _LED_H_
-#define _LED_H_
+#ifndef __LED_CONTROLLER_H__
+#define __LED_CONTROLLER_H__
 
 #include <Arduino.h>
 
 #undef FASTLED_HAS_PRAGMA_MESSAGE
+// #define FASTLED_RMT_MAX_CHANNELS=4
+// #define FASTLED_RMT_BUILTIN_DRIVER=1
+// #define FASTLED_ALLOW_INTERRUPTS 0
+// #define FASTLED_INTERRUPT_RETRY_COUNT
+#define FASTLED_ESP32_I2S 1
 #include <FastLED.h>
-
 #include <NeoPixelBus.h>
 
-#define PIN_0 4
-#define PIN_1 19
-#define PIN_2 33
-#define PIN_3 32
-
-const int PINS[] = {PIN_0, PIN_1, PIN_2, PIN_3};
-
-#define LED_CHANNEL_COUNT 4
-#define DEFAULT_BRIGHTNESS 64 // 0 to 255
-
-// Used by LEDMatrix
-#define MATRIX_TILE_WIDTH 32 // width of EACH NEOPIXEL MATRIX (not total display)
-#define MATRIX_TILE_HEIGHT 8 // height of each matrix
-#define MATRIX_TILE_H 2      // number of matrices arranged horizontally
-#define MATRIX_TILE_V 2      // number of matrices arranged vertically
-#define MATRIX_TILE_SIZE (MATRIX_TILE_WIDTH * MATRIX_TILE_HEIGHT)
-#define MATRIX_TILE_COUNT (MATRIX_TILE_H * MATRIX_TILE_V)
-
-#define MATRIX_WIDTH (MATRIX_TILE_WIDTH * MATRIX_TILE_H)
-#define MATRIX_HEIGHT (MATRIX_TILE_HEIGHT * MATRIX_TILE_V)
-#define MATRIX_SIZE (MATRIX_WIDTH * MATRIX_HEIGHT)
-
-const int LED_CHANNEL_WIDTH = MATRIX_SIZE / LED_CHANNEL_COUNT;
-
-#define AUTO_MUTEX /*MutexLockRecursive mutex(_impl->xMutex);*/
+#include "config.h"
 
 // typedef NeoMosaic<ColumnMajorAlternatingTilePreference> Mosaic;
 typedef NeoTiles<ColumnMajorAlternatingLayout , RowMajorLayout> Mosaic;
 
-void led_setup();
-void led_loop();
+class FastLedController;
+class NeoPixelBusController;
 
-inline uint32_t colorToInt(CRGB col)
-{
-   return (col.r << 16) | (col.g << 8) | col.b;
-}
+// Change this between FastLedController or NeoPixelBusController to change implementation
+typedef FastLedController DefaultLedLibrary;
 
 class LedController
 {
@@ -56,8 +34,8 @@ public:
    virtual void SetPixel(uint16_t x, uint16_t y, CRGB color) = 0;
    virtual void Tick() = 0;
    virtual void SetBrightness(int brightness) = 0;
-
    virtual void Update() = 0;
+   virtual void CopyRaw(int index, const char *src, int len) = 0;
 
    virtual void Lock() = 0;
    virtual void Unlock() = 0;
@@ -80,8 +58,10 @@ public:
 
    void Setup();
    void Clear(CRGB rgb);
+   void SetPixels(uint16_t index, CRGB* colors, int count);
    void SetPixel(uint16_t x, uint16_t y, CRGB color);
    void SetBrightness(int brigth);
+   void CopyRaw(int index, const char *src, int len);
    void Tick();
    void Update();
 
@@ -103,6 +83,7 @@ public:
    void Clear(CRGB rgb);
    void SetPixel(uint16_t x, uint16_t y, CRGB color);
    void SetBrightness(int brightness);
+   void CopyRaw(int index, const char *src, int len);
    void Tick();
    void Update();
 
@@ -115,7 +96,9 @@ private:
    struct NeoPixelBusImpl * _impl;
 };
 
-// Change this between FastLedController or NeoPixelBusController to change implementation
-typedef FastLedController DefaultLedLibrary;
+inline uint32_t colorToInt(CRGB col)
+{
+   return (col.r << 16) | (col.g << 8) | col.b;
+}
 
 #endif

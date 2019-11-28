@@ -4,11 +4,13 @@
 void setup_wifi();
 void setup_mdns();
 void setup_websocket();
+void setup_tcp();
 void setup_udp();
+void setup_raw();
 void setup_artnet();
 
-void artnet_loop();
-void wifi_loop();
-
+void artnet_tick();
+void wifi_tick();
+void led_tick();
 
 #endif

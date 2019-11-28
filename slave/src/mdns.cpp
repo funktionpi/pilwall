@@ -21,7 +21,8 @@ void setup_mdns()
    // ESP_ERROR_CHECK(mdns_service_add(nullptr, "_http", "_tcp", 80, nullptr, 0));
    // ESP_ERROR_CHECK(mdns_service_txt_item_set("_http", "_tcp", "path", "/_ac") );
 
-   ESP_ERROR_CHECK(mdns_service_add(nullptr, "_leds", "_tcp", CTRL_PORT, nullptr, 0));
+   ESP_ERROR_CHECK(mdns_service_add(nullptr, "_leds", "_tcp", TCP_PORT, nullptr, 0));
+   ESP_ERROR_CHECK(mdns_service_add(nullptr, "_leds", "_udp", UDP_PORT, nullptr, 0));
 
    // ESP_ERROR_CHECK(mdns_service_instance_name_set("_http", "_tcp", "LED Slave: Wifi configuration server"));
    // ESP_ERROR_CHECK(mdns_service_instance_name_set("_ledwall", "_tcp", "LED Slave: control service"));

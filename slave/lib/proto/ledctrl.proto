@@ -11,12 +11,12 @@ message Request {
 
    oneof request {
       ClearRequest clear = 2;
-      MatrixRequest matrix = 3;
-      BrightnessRequest brightness = 4;
-      PixelsRequest pixels = 6;
-      DrawLineRequest draw_line = 7;
-      DimensionRequest dimension = 8;
-      UpdateRequest update = 9;
+      BrightnessRequest brightness = 3;
+      PixelsRequest pixels = 4;
+      DrawLineRequest draw_line = 5;
+      DimensionRequest dimension = 6;
+      UpdateRequest update = 7;
+      RawRequest raw = 8;
    }
 }
 
@@ -43,17 +43,18 @@ message ClearRequest {
 }
 
 /*
-   Draw the whole screen
+   Copy raw byte into LED data
 */
-message MatrixRequest {
-   repeated uint32 pixels = 1 [(nanopb).max_count = 1024];
+message RawRequest {
+   int32 index = 1;
+   repeated int32 pixels = 2 [(nanopb).max_count = 96]; // 128 pixel * 3 bytes / 4 (stored as int32)
 }
 
 /*
    Update a list of pixel
 */
 message PixelsRequest {
-   repeated PixelColor pixels = 1 [(nanopb).max_count = 1024];
+   repeated PixelColor pixels = 1 [(nanopb).max_count = 128];
 }
 
 message BrightnessRequest {
