@@ -15,12 +15,27 @@ void setup()
    setup_wifi();
    setup_led();
    setup_mdns();
-   setup_udp();
-   setup_raw();
-   setup_artnet();
 
-   // setup_websocket();
-   // setup_tcp();
+#if ENABLE_ARTNET
+   setup_artnet();
+#endif
+
+#if ENABLE_OPC
+   setup_opc();
+#endif
+
+#if ENABLE_PROTO
+   setup_proto();
+#endif
+
+// setup_raw();
+#if ENABLE_E131
+   setup_e131();
+#endif
+
+#if ENABLE_TPM2
+   setup_tpm2();
+#endif
 
    LOGLN("[MAIN] Setup done");
 }
@@ -37,8 +52,26 @@ void loop()
       LOGF("[MEM] Free memory: %d kB\n", freeBytes / 1024);
    }
 
-   wifi_tick();
-   artnet_tick();
-   led_tick();
+   tick_wifi();
+   tick_led();
 
+#if ENABLE_ARTNET
+   tick_artnet();
+#endif
+
+#if ENABLE_E131
+   tick_e131();
+#endif
+
+#if ENABLE_PROTO
+   tick_proto();
+#endif
+
+#if ENABLE_OPC
+   tick_opc();
+#endif
+
+#if ENABLE_TPM2
+   tick_tpm2();
+#endif
 }

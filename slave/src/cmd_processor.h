@@ -3,7 +3,7 @@
 
 #include <ledctrl.pb.h>
 
-void process_message(uint8_t *data, size_t len, ledctrl_Response &response);
+void process_message(const uint8_t *data, size_t len, ledctrl_Response &response);
 
 size_t encode_response(const ledctrl_Response &response, uint8_t *buffer, int buflen);
 

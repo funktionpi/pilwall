@@ -101,7 +101,7 @@ void NeoPixelBusController::SetPixel(uint16_t x, uint16_t y, CRGB _color)
    else if (stripId == 3) _impl->strip3->SetPixelColor(idx, color);
 }
 
-void NeoPixelBusController::CopyRaw(int index, const char *src, int len)
+void NeoPixelBusController::CopyRaw(int index, const uint8_t *src, int len)
 {
 
 }

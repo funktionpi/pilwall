@@ -13,7 +13,7 @@ void setup_led()
    LOGF("[LED] Using %d channels with %d pixels for a total of %d pixels\n", LED_CHANNEL_COUNT, LED_CHANNEL_WIDTH, MATRIX_SIZE);
 
    controller.Setup();
-   controller.SetBrightness(DEFAULT_BRIGHTNESS);
+   // controller.SetBrightness(DEFAULT_BRIGHTNESS);
    controller.Clear(0);
    controller.Update();
 
@@ -80,7 +80,7 @@ void led_flash_colors()
    controller.Update();
 }
 
-void led_tick()
+void tick_led()
 {
    // led_cycle_pixels();
    // led_flash_colors();

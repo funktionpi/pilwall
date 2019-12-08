@@ -1,20 +1,29 @@
-#ifndef __CONFIG_H__
-#define __CONFIG_H__
+#pragma once
 
-#define HOSTNAME "esp32-01"
-#define BONJOUR_NAME "ledslave"
+#define HOSTNAME "ledwall-64x16"
+#define BONJOUR_NAME "ledwall-64x16"
 
 #define SERIAL_DEBUG
-// #define DEBUG_WEBSOCKET
-// #define DEBUG_UDP
-// #define DEBUG_RAW
-// #define DEBUG_TCP
+// #define DEBUG_PROTO
 // #define DEBUG_CMD
+// #define DEBUG_ARTNET
+#define DEBUG_OPC
+// #define DEBUG_E131
+// #define DEBUG_TPM2
 
-#define RAW_PORT 1001
-#define UDP_PORT 2001
-#define TCP_PORT 3001
-#define WEBSOCKET_PORT 9090
+#define PROTO_PORT 2001
+#define OPC_PORT 7890
+#define ARTNET_PORT 6454
+#define TPM2_IN_PORT 65506
+#define TPM2_OUT_PORT 65442
+
+#define ENABLE_ARTNET 1
+#define ENABLE_E131 0
+#define ENABLE_PROTO 1
+#define ENABLE_OPC 0
+#define ENABLE_TPM2 1
+
+#define OPC_MAX_CLIENTS 1
 
 #define PIN_0 4
 #define PIN_1 19
@@ -24,7 +33,7 @@
 const int PINS[] = {PIN_0, PIN_1, PIN_2, PIN_3};
 
 #define LED_CHANNEL_COUNT 4
-#define DEFAULT_BRIGHTNESS 32 // 0 to 255
+#define DEFAULT_BRIGHTNESS 255 // 0 to 255
 
 // Used by LEDMatrix
 #define MATRIX_TILE_WIDTH 32 // width of EACH NEOPIXEL MATRIX (not total display)
@@ -38,6 +47,7 @@ const int PINS[] = {PIN_0, PIN_1, PIN_2, PIN_3};
 #define MATRIX_HEIGHT (MATRIX_TILE_HEIGHT * MATRIX_TILE_V)
 #define MATRIX_SIZE (MATRIX_WIDTH * MATRIX_HEIGHT)
 
-const int LED_CHANNEL_WIDTH = MATRIX_SIZE / LED_CHANNEL_COUNT;
+#define MAX_UDP_PACKET_SIZE 1460
 
-#endif
+
+const int LED_CHANNEL_WIDTH = MATRIX_SIZE / LED_CHANNEL_COUNT;

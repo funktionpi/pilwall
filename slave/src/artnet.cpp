@@ -1,93 +1,86 @@
+#include "config.h"
 
-#include <ArtnetWifi.h>
-#include <WiFiUdp.h>
+#include <Artnet.h>
 
 #include "led_controller.h"
 #include "log.h"
-#include "config.h"
 #include "led.h"
+#include "stopwatch.h"
 
-#ifndef DEBUG_DMX
-   #undef LOG
-   #undef LOGLN
-   #undef LOGF
-   #define LOG(...)
-   #define LOGLN(...)
-   #define LOGF(...)
+#ifndef DEBUG_ARTNET
+#undef DLOG
+#undef DLOGLN
+#undef DLOGF
+#define DLOG(...)
+#define DLOGLN(...)
+#define DLOGF(...)
 #endif
 
-
-ArtnetWifi artnet;
 const int startUniverse = 1;
+const int ledsPerUniverse = 128;
+const int channelsPerUniverse = ledsPerUniverse * 3;
+const int maxUniverses = MATRIX_SIZE / ledsPerUniverse;
 
-const int numberOfChannels = MATRIX_SIZE * 3;
+ArtnetReceiver artnet;
+StopWatch artnet_sw(false);
 
-// Check if we got all universes
-const int maxUniverses = numberOfChannels / 512 + ((numberOfChannels % 512) ? 1 : 0);
-bool universesReceived[maxUniverses];
-bool sendFrame = 1;
-int previousDataLength = 0;
-
-void onDmxFrame(uint16_t universe, uint16_t length, uint8_t sequence, uint8_t *data)
+void onDmxFrame(uint8_t universe, uint8_t *data, uint16_t length)
 {
-   // LOGF("[DMX] received dmx frame\n");
+   artnet_sw.start();
 
-   sendFrame = 1;
-   // set brightness of the whole strip
-   if (universe == 15)
-   {
-      LEDs().SetBrightness(data[0]);
-   }
+   DLOGF("[ARTNET] received dmx frame, universe: %d, length: %d\n", universe, length);
 
-   // Store which universe has got in
-   if ((universe - startUniverse) < maxUniverses)
+   if (universe < startUniverse || universe > maxUniverses)
    {
-      universesReceived[universe - startUniverse] = 1;
-   }
-
-   for (int i = 0; i < maxUniverses; i++)
-   {
-      if (universesReceived[i] == 0)
-      {
-         // LOGLN("[DMX] broke");
-         sendFrame = 0;
-         break;
-      }
+      LOGF("[ARTNET] invalid universe: %d, only support range [%d-%d]", universe, startUniverse, maxUniverses);
    }
 
    // read universe and put into the right part of the display buffer
+   int index = (universe - startUniverse) * ledsPerUniverse;
+   int ledCount = length / 3;
+   if (ledCount > ledsPerUniverse)
+   {
+      // DLOGLN("[ARTNET] data overflow");
+      ledCount = ledsPerUniverse;
+   }
+   DLOGF("[ARTNET] writing to index %d, led count : %d\n", index, ledCount);
    LEDs().Lock();
-   for (int i = 0; i < length / 3; i++)
-   {
-      int led = i + (universe - startUniverse) * (previousDataLength / 3);
-      if (led < MATRIX_SIZE) {
-         uint16_t x = led % MATRIX_WIDTH;
-         uint16_t y = led / MATRIX_WIDTH;
-         // LOGF("[DMX] setting led #%d = (%d,%d)\n", led, x, y);
-         LEDs().SetPixel(x, y, CRGB(data[i * 3], data[i * 3 + 1], data[i * 3 + 2]));
-      }
-   }
+   LEDs().CopyRaw(index, data, ledCount);
    LEDs().Unlock();
-   previousDataLength = length;
 
-   if (sendFrame)
-   {
-      // LOGLN("[DMX] sending update");
-      LEDs().Update();
-      // Reset universeReceived to 0
-      memset(universesReceived, 0, maxUniverses);
-   }
+   // DLOGLN("[ARTNET] sending update");
+   LEDs().Update();
+
+   artnet_sw.stop();
 }
 
 void setup_artnet()
 {
-   LOGF("[DMX] Setting up Artnet controller\n");
-   artnet.setArtDmxCallback(onDmxFrame);
-   artnet.begin(HOSTNAME);
-   LOGF("[DMX] Artnet setup done.\n");
+   LOGF("[ARTNET] Setting up Artnet controller\n");
+
+   for (int i = startUniverse; i <= maxUniverses; ++i)
+   {
+      auto idx = (i - startUniverse) * ledsPerUniverse;
+      LOGF("[ARTNET] registering universe #%d for led [%d-%d]\n", i, idx, idx + ledsPerUniverse - 1);
+      artnet.subscribe(i, [i](uint8_t *data, uint16_t size) {
+         onDmxFrame(i, data, size);
+      });
+   }
+
+   artnet.begin(ARTNET_PORT);
+   LOGF("[ARTNET] Artnet setup done.\n");
 }
 
-void artnet_tick()
+void tick_artnet()
 {
-   artnet.read();
+   artnet.parse();
+
+   EVERY_N_SECONDS(5)
+   {
+      if (artnet_sw.runs())
+      {
+         LOGF("[ARTNET] took average of %d ms to process %d packets\n", artnet_sw.averagems(), artnet_sw.runs());
+         artnet_sw.reset();
+      }
+   }
 }

@@ -23,7 +23,7 @@ CRGB fromProtoColor(uint32_t color)
    return CRGB(r, g, b);
 }
 
-void process_message(uint8_t *data, size_t len, ledctrl_Response &response)
+void process_message(const uint8_t *data, size_t len, ledctrl_Response &response)
 {
    ledctrl_Request msg = ledctrl_Request_init_default;
 
@@ -57,7 +57,7 @@ void process_message(uint8_t *data, size_t len, ledctrl_Response &response)
       auto count = msg.request.raw.pixels_count * 4 / 3;
       DLOGF("[PB] received a raw pixel request, index: %d, count: %d\n", msg.request.raw.index, count);
       LEDs().Lock();
-      LEDs().CopyRaw(msg.request.raw.index, (char *)msg.request.raw.pixels, count);
+      LEDs().CopyRaw(msg.request.raw.index, (uint8_t *)msg.request.raw.pixels, count);
       LEDs().Unlock();
       break;
    }

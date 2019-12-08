@@ -1,18 +1,17 @@
-#ifndef __LED_CONTROLLER_H__
-#define __LED_CONTROLLER_H__
+#pragma once
 
 #include <Arduino.h>
 
-#undef FASTLED_HAS_PRAGMA_MESSAGE
-// #define FASTLED_RMT_MAX_CHANNELS=4
-// #define FASTLED_RMT_BUILTIN_DRIVER=1
-// #define FASTLED_ALLOW_INTERRUPTS 0
-// #define FASTLED_INTERRUPT_RETRY_COUNT
+// #define FASTLED_RMT_MAX_CHANNELS 4
+// #define FASTLED_RMT_BUILTIN_DRIVER 1
+#define FASTLED_ALLOW_INTERRUPTS 0
+#define FASTLED_INTERRUPT_RETRY_COUNT 1
 #define FASTLED_ESP32_I2S 1
 #include <FastLED.h>
 #include <NeoPixelBus.h>
 
 #include "config.h"
+typedef CRGBArray<MATRIX_SIZE> NeoPixelStrip;
 
 // typedef NeoMosaic<ColumnMajorAlternatingTilePreference> Mosaic;
 typedef NeoTiles<ColumnMajorAlternatingLayout , RowMajorLayout> Mosaic;
@@ -35,7 +34,7 @@ public:
    virtual void Tick() = 0;
    virtual void SetBrightness(int brightness) = 0;
    virtual void Update() = 0;
-   virtual void CopyRaw(int index, const char *src, int len) = 0;
+   virtual void CopyRaw(int index, const uint8_t *src, int len) = 0;
 
    virtual void Lock() = 0;
    virtual void Unlock() = 0;
@@ -61,7 +60,7 @@ public:
    void SetPixels(uint16_t index, CRGB* colors, int count);
    void SetPixel(uint16_t x, uint16_t y, CRGB color);
    void SetBrightness(int brigth);
-   void CopyRaw(int index, const char *src, int len);
+   void CopyRaw(int index, const uint8_t *src, int len);
    void Tick();
    void Update();
 
@@ -70,6 +69,10 @@ public:
 
    void Task();
 private:
+   void  flipBuffer();
+   NeoPixelStrip* buffer();
+   void setBuffers(CRGB *buffer);
+
    struct FastLedImpl *_impl;
 };
 
@@ -83,7 +86,7 @@ public:
    void Clear(CRGB rgb);
    void SetPixel(uint16_t x, uint16_t y, CRGB color);
    void SetBrightness(int brightness);
-   void CopyRaw(int index, const char *src, int len);
+   void CopyRaw(int index, const uint8_t *src, int len);
    void Tick();
    void Update();
 
@@ -100,5 +103,3 @@ inline uint32_t colorToInt(CRGB col)
 {
    return (col.r << 16) | (col.g << 8) | col.b;
 }
-
-#endif

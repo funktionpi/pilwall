@@ -25,7 +25,7 @@ import (
 )
 
 var mosaic = layout.Mosaic{
-	TileSize: image.Pt(2,2),
+	TileSize: image.Pt(2, 2),
 	TileTopo: layout.RowMajorLayout,
 	PanelTopo: layout.Topology{
 		Width:  32,
@@ -62,7 +62,7 @@ func main() {
 	errors.ExitIfErr(err)
 	defer client.Close()
 
-	err = client.SetBrightness(16)
+	err = client.SetBrightness(8)
 	errors.ExitIfErr(err)
 
 	dimension, err := client.GetDimension()
@@ -75,8 +75,21 @@ func main() {
 	playGif(client, dimension)
 	//drawTest(client, dimension)
 	//drawHue(client)
+	// drawGradient(client, dimension)
 
 	//WaitForCtrlC()
+}
+
+func drawGradient(client slave.Client, dimension *slave.DimensionResponse) {
+	rgb := color.Black.RGB()
+
+	client.SetBrightness(255)
+
+	for x := int16(0); x < int16(dimension.Width); x++ {
+		client.DrawLine(x, 0, x, int16(dimension.Height), rgb)
+		rgb.B += (256 / 64)
+	}
+	client.UpdateScreen()
 }
 
 func drawHue(client *slave.ProtoClient) {
@@ -92,28 +105,28 @@ func drawHue(client *slave.ProtoClient) {
 }
 
 func drawTest(client *slave.ProtoClient, dimension *slave.DimensionResponse) {
-	err := client.Clear(color.Green)
+	err := client.Clear(color.Yellow)
 	errors.PrintIfErr(err)
 
-	//w, h := int(dimension.Width), int(dimension.Height)
-	////fw, fh := float64(w), float64(h)
-	//
-	//ctx := gg.NewContext(w,h)
-	//
-	//ctx.SetColor(color.Green)
-	//ctx.SetPixel(0,0)
-	//
-	//ctx.SetColor(color.Blue)
-	//ctx.SetPixel(w-1, 0)
-	//
-	//ctx.SetColor(color.Cyan)
-	//ctx.SetPixel(0,h-1)
-	//
-	//ctx.SetColor(color.Red)
-	//ctx.SetPixel(w-1, h-1)
-	//
-	//err = client.DrawImg(ctx.Image())
-	//errors.PrintIfErr(err)
+	w, h := int(dimension.Width), int(dimension.Height)
+	//fw, fh := float64(w), float64(h)
+
+	ctx := gg.NewContext(w, h)
+
+	ctx.SetColor(color.Green)
+	ctx.SetPixel(0, 0)
+
+	ctx.SetColor(color.Blue)
+	ctx.SetPixel(w-1, 0)
+
+	ctx.SetColor(color.Cyan)
+	ctx.SetPixel(0, h-1)
+
+	ctx.SetColor(color.Red)
+	ctx.SetPixel(w-1, h-1)
+
+	err = client.DrawImg(ctx.Image())
+	errors.PrintIfErr(err)
 
 	err = client.UpdateScreen()
 	errors.PrintIfErr(err)
@@ -123,6 +136,7 @@ func drawTest(client *slave.ProtoClient, dimension *slave.DimensionResponse) {
 
 func playGif(client slave.Client, dimension *slave.DimensionResponse) {
 
+	//fh, err := os.Open("gif/Blinky2.gif")
 	fh, err := os.Open("gif/blocks1.gif")
 	errors.ExitIfErr(err)
 
@@ -140,24 +154,27 @@ func playGif(client slave.Client, dimension *slave.DimensionResponse) {
 	for {
 		for i, gifImg := range anim.Image {
 
+			//err = client.SetBrightness(8)
+			//errors.ExitIfErr(err)
+
 			//println("color model:", reflect.TypeOf(gifImg.ColorModel()).Name())
 
-			ctx.DrawImage(gifImg, 0,0)
+			ctx.DrawImage(gifImg, 0, 0)
 			//ctx.SavePNG(fmt.Sprintf("test%d.png", i))
 
 			delay := anim.Delay[i]
 			proto.Int(delay)
 			//ch := time.After(time.Duration(delay) * time.Second / 100)
+			ch := time.After(time.Second / 120)
 
 			err = client.DrawImg(ctx.Image())
 			//err = client.DrawImgRaw(ctx.Image(), mosaic)
 			errors.PrintIfErr(err)
 
 			err = client.UpdateScreen()
-			//errors.PrintIfErr(err)
+			errors.PrintIfErr(err)
 
-			//<-ch
-			time.Sleep(time.Millisecond * 1)
+			<-ch
 		}
 	}
 }
@@ -262,7 +279,7 @@ func LookupMDNS() []DnsEntry {
 		}
 	}(results, resolver.Exit)
 
-	err = resolver.Browse("_leds._tcp", "local.", results)
+	err = resolver.Browse("pileds._udp", "local.", results)
 	if err != nil {
 		log.Println("Failed to browse:", err.Error())
 	}
@@ -314,7 +331,7 @@ func LookupZeroconf() []DnsEntry {
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 	defer cancel()
-	err = resolver.Browse(ctx, "_leds._tcp", "", entries)
+	err = resolver.Browse(ctx, "pileds._udp", "", entries)
 	errors.ExitIfErr(err)
 
 	<-ctx.Done()

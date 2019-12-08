@@ -81,13 +81,13 @@ func (c *ProtoClient) processResponse() {
 
 func (c *ProtoClient) SetBrightness(brightness uint8) error {
 
-	fmt.Printf("setting brightness to %d\n", brightness)
+	//fmt.Printf("setting brightness to %d\n", brightness)
 
 	req := &Request_Brightness{&BrightnessRequest{
 		Brightness: int32(brightness),
 	}}
 
-	_, err := WaitForResponse(c.send(req))
+	_, err := c.WaitForResponse(c.send(req))
 	return err
 }
 
@@ -98,13 +98,13 @@ func (c *ProtoClient) Clear(color color.Color) error {
 	req := &Request_Clear{&ClearRequest{
 		Color: val,
 	}}
-	_, err := WaitForResponse(c.send(req))
+	_, err := c.WaitForResponse(c.send(req))
 	return err
 }
 
 func (c *ProtoClient) GetDimension() (*DimensionResponse, error) {
 	req := &Request_Dimension{&DimensionRequest{}}
-	msg, err := WaitForResponse(c.send(req))
+	msg, err := c.WaitForResponse(c.send(req))
 	if err != nil {
 		return nil, err
 	}
@@ -122,7 +122,7 @@ func (c *ProtoClient) UpdateScreen() error {
 		Update: &UpdateRequest{},
 	}
 
-	_, err := WaitForResponse(c.send(req))
+	_, err := c.WaitForResponse(c.send(req))
 	return err
 }
 
@@ -136,7 +136,7 @@ func (c *ProtoClient) DrawLine(x1, y1, x2, y2 int16, rgba color.Color) error {
 		End:   convertCoord(x2, y2),
 	}}
 
-	_, err := WaitForResponse(c.send(req))
+	_, err := c.WaitForResponse(c.send(req))
 	return err
 }
 
@@ -169,7 +169,7 @@ func (c *ProtoClient) DrawImgRaw(img image.Image, mosaic layout.Mosaic) error {
 
 		sw.Start()
 		reqcount++
-		_, err := WaitForResponse(c.send(&req))
+		_, err := c.WaitForResponse(c.send(&req))
 		//_, err := c.send(&req)
 		sw.Stop()
 
@@ -178,8 +178,8 @@ func (c *ProtoClient) DrawImgRaw(img image.Image, mosaic layout.Mosaic) error {
 		}
 	}
 
-	qwe := sw.Elapsed().Milliseconds()
-	println("elapsed: ", qwe, "ms on", reqcount, "requests")
+	//qwe := sw.Elapsed().Milliseconds()
+	//println("elapsed: ", qwe, "ms on", reqcount, "requests")
 
 	return nil
 }
@@ -215,7 +215,8 @@ func (c *ProtoClient) DrawImg(img image.Image) error {
 			if len(req.Pixels.Pixels) > 0 && (len(req.Pixels.Pixels) == maxcount || (x == w-1 && y == h-1)) {
 				//fmt.Printf("sending packet, size %d, %d pixels\n", size, len(req.Pixels.Pixels))
 				sw.Start()
-				_, err := WaitForResponse(c.send(req))
+				_, err := c.WaitForResponse(c.send(req))
+				//_, _, err := c.send(req)
 				reqcount++
 				pixcount += len(req.Pixels.Pixels)
 				sw.Stop()
@@ -243,7 +244,7 @@ func (c *ProtoClient) DrawImg(img image.Image) error {
 	return nil
 }
 
-func WaitForResponse(respChan <-chan *Response, err error) (*Response, error) {
+func (c *ProtoClient) WaitForResponse(respChan <-chan *Response, id int32, err error) (*Response, error) {
 	if err != nil {
 		return nil, err
 	}
@@ -254,32 +255,34 @@ func WaitForResponse(respChan <-chan *Response, err error) (*Response, error) {
 		//println("response received successfully")
 		return response, nil
 	case <-time.After(1 * time.Second):
+		c.responses.Delete(id)
 		return nil, fmt.Errorf("response timeout")
 	}
 }
 
-func (c *ProtoClient) send(req isRequest_Request) (<-chan *Response, error) {
+func (c *ProtoClient) send(req isRequest_Request) (<-chan *Response, int32, error) {
 
 	msg := Request{
 		Id:      c.next,
 		Request: req,
 	}
+	defer func() {c.next++}()
 
 	respChan := make(chan *Response)
 	c.responses.Store(c.next, &respChan)
-	c.next++
+
 
 	buf, err := proto.Marshal(&msg)
 	if err != nil {
-		return nil, err
+		return nil, c.next, err
 	}
 
 	_, err = c.udpsock.Write(buf)
 	if err != nil {
-		return nil, err
+		return nil, c.next, err
 	}
 
-	return respChan, err
+	return respChan, c.next, err
 }
 
 // Downgrade 24-bit color to 16-bit (add reverse gamma lookup here?)

@@ -38,7 +38,7 @@ void setup_wifi()
    }
 }
 
-void wifi_tick()
+void tick_wifi()
 {
    Portal.handleClient();
 }

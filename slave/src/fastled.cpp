@@ -1,6 +1,7 @@
 #include "led.h"
 #include "led_controller.h"
 #include "log.h"
+#include "stopwatch.h"
 
 #define FASTLED_SHOW_CORE 0
 
@@ -17,6 +18,9 @@ struct FastLedImpl
    NeoPixelStrip backbuffer;
    NeoPixelStrip frontbuffer;
 
+   StopWatch lockWatch;
+   StopWatch drawWatch;
+
    CLEDController *controllers[LED_CHANNEL_COUNT];
 };
 
@@ -29,6 +33,8 @@ void FastLEDshowTask(void *pvParameters)
 FastLedController::FastLedController()
     : _impl(new FastLedImpl())
 {
+   _impl->lockWatch.reset();
+   _impl->drawWatch.reset();
    _impl->FastLEDshowTaskHandle = 0;
 }
 
@@ -53,6 +59,7 @@ void FastLedController::Setup()
    {
       LOGLN("[FLED] init led frontbuffer #2");
       _impl->controllers[3] = &FastLED.addLeds<WS2812B, PIN_2, GRB>(_impl->frontbuffer, 2 * LED_CHANNEL_WIDTH, LED_CHANNEL_WIDTH);
+      // _impl->controllers[3]->setTemperature(MercuryVapor);
    }
    if (LED_CHANNEL_COUNT > 3)
    {
@@ -61,7 +68,7 @@ void FastLedController::Setup()
    }
 
    FastLED.setCorrection(TypicalSMD5050);
-   FastLED.setDither(DISABLE_DITHER);
+   FastLED.setDither(BINARY_DITHER);
    FastLED.clearData();
 
    // set max power to 30 amps * 5v
@@ -76,9 +83,11 @@ void FastLedController::Setup()
    LOGF("[FLED] Memory size of pixel: %d bytes, Buffer size: %d bytes, Array size: %d\n", pixsize, bufsize, arraysize)
 
    // -- Create the FastLED show task
-   xTaskCreatePinnedToCore(FastLEDshowTask, "FastLEDshowTask", 2048, this, 2, &_impl->FastLEDshowTaskHandle, FASTLED_SHOW_CORE);
+   xTaskCreatePinnedToCore(FastLEDshowTask, "FastLEDshowTask", 2048, this, 1, &_impl->FastLEDshowTaskHandle, FASTLED_SHOW_CORE);
 
    // FastLED.setMaxRefreshRate(60, false);
+
+   FastLED.show();
 
    LOGLN("[FLED] FastLED setup done")
 }
@@ -86,35 +95,24 @@ void FastLedController::Setup()
 void FastLedController::SetBrightness(int brightness)
 {
    FastLED.setBrightness(brightness);
-   LOGF("[FLED] brightness set to %d\n", brightness);
+   // LOGF("[FLED] brightness set to %d\n", brightness);
 }
 
 void FastLedController::Lock()
 {
-   // auto m = millis();
-   // if (xPortInIsrContext())
-   //    xSemaphoreTakeFromISR(_impl->xMutex, nullptr);
-   // else
-      xSemaphoreTake(_impl->xMutex, portMAX_DELAY);
-
-   // auto diff = millis() - m;
-   // if (diff > 0) {
-   //    auto xHandle = xTaskGetCurrentTaskHandle();
-   //    LOGF("[FLED] task %s blocked by mutex for  %dms\n", pcTaskGetTaskName(xHandle), int(diff));
-   // }
+   // _impl->lockWatch.start();
+   // xSemaphoreTake(_impl->xMutex, portMAX_DELAY);
+   // _impl->lockWatch.stop();
 }
 
 void FastLedController::Unlock()
 {
-   // if (xPortInIsrContext())
-   //    xSemaphoreGiveFromISR(_impl->xMutex, nullptr);
-   // else
-      xSemaphoreGive(_impl->xMutex);
+   // xSemaphoreGive(_impl->xMutex);
 }
 
-void FastLedController::CopyRaw(int index, const char *src, int len)
+void FastLedController::CopyRaw(int index, const uint8_t *src, int len)
 {
-   memcpy8(_impl->backbuffer.leds + index, src, len * sizeof(CRGB));
+   memcpy(_impl->backbuffer.leds + index, src, len * sizeof(CRGB));
 }
 
 void FastLedController::Clear(CRGB color)
@@ -133,31 +131,38 @@ void FastLedController::Tick()
    EVERY_N_SECONDS(5)
    {
       LOGF("[FLED] Current FPS: %d fps\n", FastLED.getFPS());
+      // LOGF("[FLED] Lock average: %d us (%d runs)\n", _impl->lockWatch.average(), _impl->lockWatch.runs());
+      // _impl->lockWatch.reset();
+      LOGF("[FLED] Draw average: %d ms (%d runs)\n", _impl->drawWatch.averagems(), _impl->drawWatch.runs());
+      _impl->drawWatch.reset();
    }
 #endif
 }
 
 void FastLedController::Update()
 {
-   // _impl->show = true;
    xTaskNotifyGive(_impl->FastLEDshowTaskHandle);
+//   memcpy(_impl->frontbuffer.leds, _impl->backbuffer.leds, MATRIX_SIZE * sizeof(CRGB));
 }
 
 void FastLedController::Task()
 {
-   delay(250); // wait a little before starting ops
+   delay(250); // wait a little before starting to draw
 
    LOGF("[FLED] running FastLED task on core %d\n", xPortGetCoreID());
 
    for (;;)
    {
-      if (ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(1)) != 0)
+      if (ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(1)) != pdTRUE)
       {
-         Lock();
-         memcpy8(_impl->frontbuffer.leds, _impl->backbuffer.leds, MATRIX_SIZE * sizeof(CRGB));
-         Unlock();
+         // Lock();
+         memcpy(_impl->frontbuffer.leds, _impl->backbuffer.leds, MATRIX_SIZE * sizeof(CRGB));
+         // Unlock();
       }
 
+      _impl->drawWatch.start();
       FastLED.show();
+      _impl->drawWatch.stop();
+      taskYIELD();
    }
 }

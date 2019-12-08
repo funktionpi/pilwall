@@ -1,9 +1,6 @@
-#ifndef _LED_H_
-#define _LED_H_
+#pragma once
 
 void setup_led();
-void led_tick();
+void tick_led();
 
 class LedController;
-
-#endif
