@@ -59,6 +59,10 @@ void loop()
    tick_artnet();
 #endif
 
+#if ENABLE_TPM2
+   tick_tpm2();
+#endif
+
 #if ENABLE_E131
    tick_e131();
 #endif
@@ -71,7 +75,4 @@ void loop()
    tick_opc();
 #endif
 
-#if ENABLE_TPM2
-   tick_tpm2();
-#endif
 }

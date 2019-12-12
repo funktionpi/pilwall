@@ -7,12 +7,12 @@
 
 #include <pb_encode.h>
 #include <pb_decode.h>
-#include <ledctrl.pb.h>
+#include <pi.pb.h>
 
 #include "log.h"
 #include "cmd_processor.h"
 
-#ifndef DEBUG_UDP
+#if DEBUG_PROTO
    #undef DLOG
    #undef DLOGLN
    #undef DLOGF
@@ -32,7 +32,7 @@ void on_proto_packet(const uint8_t* data, int length, WiFiUDP* svr)
 {
    DLOGF("[PROTO] received UDP packet, size: %d\n", length);
 
-   ledctrl_Response response;
+   piproto_Response response;
    process_message(data, length, response);
 
    uint8_t buf[128] = {0};
@@ -55,7 +55,7 @@ void on_proto_packet(const uint8_t* data, int length, WiFiUDP* svr)
    }
 }
 
-Udp proto_udp(PROTO_PORT, on_proto_packet);
+Udp proto_udp("PROTO", PROTO_PORT, on_proto_packet);
 
 void setup_proto()
 {

@@ -8,7 +8,7 @@ typedef void (*UdpCallback)(const uint8_t *data, int length, WiFiUDP* svr);
 
 class Udp {
 public:
-   Udp(uint16_t port, UdpCallback cb);
+   Udp(const char* id, uint16_t port, UdpCallback cb);
    void start();
    void tick();
 
@@ -19,4 +19,5 @@ private:
    StopWatch sw;
    uint16_t port;
    bool firsttick;
+   const char* id;
 };

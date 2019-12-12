@@ -6,7 +6,7 @@
 #include "led_controller.h"
 #include "cmd_processor.h"
 
-#ifndef DEBUG_CMD
+#if DEBUG_CMD
 #undef DLOG
 #undef DLOGLN
 #undef DLOGF
@@ -23,15 +23,15 @@ CRGB fromProtoColor(uint32_t color)
    return CRGB(r, g, b);
 }
 
-void process_message(const uint8_t *data, size_t len, ledctrl_Response &response)
+void process_message(const uint8_t *data, size_t len, piproto_Response &response)
 {
-   ledctrl_Request msg = ledctrl_Request_init_default;
+   piproto_Request msg = piproto_Request_init_default;
 
    // LOGLN("[PB] reading from buffer message");
    auto stream = pb_istream_from_buffer(data, len);
 
    // LOGLN("[PB] decoding protobuf message");
-   auto status = pb_decode(&stream, ledctrl_Request_fields, &msg);
+   auto status = pb_decode(&stream, piproto_Request_fields, &msg);
 
    if (!status)
    {
@@ -44,15 +44,15 @@ void process_message(const uint8_t *data, size_t len, ledctrl_Response &response
 
    switch (msg.which_request)
    {
-   case ledctrl_Request_dimension_tag:
+   case piproto_Request_dimension_tag:
    {
       LOGLN("[PB] received a dimension request");
-      response.which_response = ledctrl_Response_dimension_tag;
+      response.which_response = piproto_Response_dimension_tag;
       response.response.dimension.width = LEDs().Width();
       response.response.dimension.height = LEDs().Height();
       break;
    }
-   case ledctrl_Request_raw_tag:
+   case piproto_Request_raw_tag:
    {
       auto count = msg.request.raw.pixels_count * 4 / 3;
       DLOGF("[PB] received a raw pixel request, index: %d, count: %d\n", msg.request.raw.index, count);
@@ -61,7 +61,7 @@ void process_message(const uint8_t *data, size_t len, ledctrl_Response &response
       LEDs().Unlock();
       break;
    }
-   case ledctrl_Request_clear_tag:
+   case piproto_Request_clear_tag:
    {
       DLOGLN("[PB] received a clear request");
       auto color = CRGB(msg.request.clear.color);
@@ -72,7 +72,7 @@ void process_message(const uint8_t *data, size_t len, ledctrl_Response &response
       LEDs().Unlock();
       break;
    }
-   case ledctrl_Request_pixels_tag:
+   case piproto_Request_pixels_tag:
    {
       DLOGF("[PB] received with %d pixels request\n", msg.request.pixels.pixels_count);
       LEDs().Lock();
@@ -87,7 +87,7 @@ void process_message(const uint8_t *data, size_t len, ledctrl_Response &response
       LEDs().Unlock();
       break;
    }
-   case ledctrl_Request_draw_line_tag:
+   case piproto_Request_draw_line_tag:
    {
       DLOGLN("[PB] received a draw_line request");
       auto x1 = (msg.request.draw_line.start.xy & 0xFFFF0000) >> 16;
@@ -103,7 +103,7 @@ void process_message(const uint8_t *data, size_t len, ledctrl_Response &response
       LEDs().Unlock();
       break;
    }
-   case ledctrl_Request_brightness_tag:
+   case piproto_Request_brightness_tag:
    {
       DLOGLN("[PB] received a set brightness request");
 
@@ -120,7 +120,7 @@ void process_message(const uint8_t *data, size_t len, ledctrl_Response &response
       LEDs().SetBrightness(val);
       break;
    }
-   case ledctrl_Request_update_tag:
+   case piproto_Request_update_tag:
    {
       DLOGLN("[PB] received an update request");
       LEDs().Update();
@@ -129,17 +129,17 @@ void process_message(const uint8_t *data, size_t len, ledctrl_Response &response
    }
 }
 
-size_t encode_response(const ledctrl_Response &response, uint8_t *outbuffer, int bufalloc)
+size_t encode_response(const piproto_Response &response, uint8_t *outbuffer, int bufalloc)
 {
    auto ostream = pb_ostream_from_buffer((pb_byte_t *)outbuffer, bufalloc);
-   if (!pb_encode(&ostream, ledctrl_Response_fields, &response))
+   if (!pb_encode(&ostream, piproto_Response_fields, &response))
    {
       DLOGF("[PB] Could not encode response for request %d\n", response.id);
       return 0;
    }
 
    size_t outlen;
-   if (!pb_get_encoded_size(&outlen, ledctrl_Response_fields, &response))
+   if (!pb_get_encoded_size(&outlen, piproto_Response_fields, &response))
    {
       DLOGF("[PB] Could not compute reponse size for request %d\n", response.id);
    }

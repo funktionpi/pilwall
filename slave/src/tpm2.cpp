@@ -1,4 +1,3 @@
-#include <Arduino.h>
 #include <WiFiUdp.h>
 
 #include "led_controller.h"
@@ -8,7 +7,7 @@
 #include "log.h"
 #include "udp.h"
 
-#ifndef DEBUG_TPM2
+#if DEBUG_TPM2
    #undef DLOG
    #undef DLOGLN
    #undef DLOGF
@@ -107,7 +106,7 @@ void on_tpm2_packet(const uint8_t* data, int length, WiFiUDP* svr)
    }
 }
 
-Udp tpm2_udp(TPM2_IN_PORT, on_tpm2_packet);
+Udp tpm2_udp("TPM2", TPM2_IN_PORT, on_tpm2_packet);
 
 void setup_tpm2()
 {

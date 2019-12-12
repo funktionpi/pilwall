@@ -1,0 +1,82 @@
+syntax = "proto3";
+
+import "nanopb.proto";
+
+package piproto;
+option go_package = "pi_proto";
+
+message Request {
+   int32 id = 1; // request id
+
+   oneof request {
+      ClearRequest clear = 2;
+      BrightnessRequest brightness = 3;
+      PixelsRequest pixels = 4;
+      DrawLineRequest draw_line = 5;
+      DimensionRequest dimension = 6;
+      UpdateRequest update = 7;
+      RawRequest raw = 8;
+   }
+}
+
+message Response {
+   int32 id = 1; // request id this is the response to
+
+   oneof response {
+      EmptyResponse empty = 2;
+      DimensionResponse dimension = 3;
+   }
+}
+
+message Coord {
+   int32 xy = 1; // encoded x << 16, y << 0
+}
+
+message PixelColor {
+   uint32 color = 1;
+   Coord coord = 2;
+}
+
+message ClearRequest {
+   uint32 color = 1; // r << 16, g << 8, b << 0
+}
+
+/*
+   Copy raw byte into LED data
+*/
+message RawRequest {
+   int32 index = 1;
+   repeated int32 pixels = 2 [(nanopb).max_count = 96]; // 128 pixel * 3 bytes / 4 (stored as int32)
+}
+
+/*
+   Update a list of pixel
+*/
+message PixelsRequest {
+   repeated PixelColor pixels = 1 [(nanopb).max_count = 128];
+}
+
+message BrightnessRequest {
+   int32 brightness = 1;
+}
+
+message DrawLineRequest {
+   uint32 color = 1;
+   Coord start = 2;
+   Coord end = 3;
+}
+
+message DimensionRequest {
+}
+
+message EmptyResponse{
+}
+
+message UpdateRequest {
+}
+
+message DimensionResponse {
+   int32 width = 1;
+   int32 height = 2;
+}
+

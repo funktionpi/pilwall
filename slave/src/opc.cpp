@@ -9,7 +9,7 @@
 #include "log.h"
 #include "led_controller.h"
 
-#ifndef DEBUG_OPC
+#if DEBUG_OPC
    #undef DLOG
    #undef DLOGLN
    #undef DLOGF
@@ -17,7 +17,6 @@
    #define DLOGLN(...)
    #define DLOGF(...)
 #endif
-
 
 const int OPC_MAX_CHANNEL = 128;
 const int OPC_LED_PER_CHANNEL = MATRIX_SIZE / OPC_MAX_CHANNEL;

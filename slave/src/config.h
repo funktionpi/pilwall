@@ -1,15 +1,17 @@
 #pragma once
 
+#include <NeoPixelBus.h>
+
 #define HOSTNAME "ledwall-64x16"
 #define BONJOUR_NAME "ledwall-64x16"
 
-#define SERIAL_DEBUG
-// #define DEBUG_PROTO
-// #define DEBUG_CMD
-// #define DEBUG_ARTNET
-#define DEBUG_OPC
-// #define DEBUG_E131
-// #define DEBUG_TPM2
+// #define SERIAL_DEBUG
+#define DEBUG_PROTO 0
+#define DEBUG_CMD 0
+#define DEBUG_ARTNET 1
+#define DEBUG_OPC 0
+#define DEBUG_E131 0
+#define DEBUG_TPM2 1
 
 #define PROTO_PORT 2001
 #define OPC_PORT 7890
@@ -30,6 +32,9 @@
 #define PIN_2 33
 #define PIN_3 32
 
+// amount of amps @ 5v
+#define POWER_AMPS 30
+
 const int PINS[] = {PIN_0, PIN_1, PIN_2, PIN_3};
 
 #define LED_CHANNEL_COUNT 4
@@ -49,5 +54,12 @@ const int PINS[] = {PIN_0, PIN_1, PIN_2, PIN_3};
 
 #define MAX_UDP_PACKET_SIZE 1460
 
+typedef NeoTiles<ColumnMajorAlternatingLayout , RowMajorLayout> Mosaic;
+
+class FastLedController;
+class NeoPixelBusController;
+
+// Change this between FastLedController or NeoPixelBusController to change implementation
+typedef FastLedController DefaultLedLibrary;
 
 const int LED_CHANNEL_WIDTH = MATRIX_SIZE / LED_CHANNEL_COUNT;

@@ -1,3 +1,4 @@
+
 #include <Arduino.h>
 #include <WiFiUdp.h>
 #include <FastLED.h>
@@ -6,10 +7,11 @@
 #include "log.h"
 #include "Udp.h"
 
-Udp::Udp(uint16_t port, UdpCallback cb)
+Udp::Udp(const char* id, uint16_t port, UdpCallback cb)
 :  cb(cb),
    port(port),
-   firsttick(true)
+   firsttick(true),
+   id(id)
 {
    buffer = new uint8_t[MAX_UDP_PACKET_SIZE];
    udp = new WiFiUDP();
@@ -20,7 +22,7 @@ void Udp::start()
 {
    if (udp->begin(port))
    {
-      LOGF("[UDP] listening to port udp %d\n", port)
+      LOGF("[%s] listening to port udp %d\n", id, port)
    }
 }
 
@@ -29,7 +31,7 @@ void Udp::tick()
    if (firsttick)
    {
       firsttick = false;
-      LOGF("[UDP] running tick on core %d\n", xPortGetCoreID());
+      LOGF("[%s] running udp tick on core %d\n", id, xPortGetCoreID());
    }
 
    if (udp->parsePacket())
@@ -50,7 +52,7 @@ void Udp::tick()
    {
       if (sw.runs())
       {
-         LOGF("[UDP] took average of %d ms to process %d udp commands\n", sw.averagems(), sw.runs());
+         LOGF("[%s] took average of %d ms to process %d udp packets\n", id, sw.averagems(), sw.runs());
          sw.reset();
       }
    }

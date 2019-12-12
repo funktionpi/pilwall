@@ -7,7 +7,7 @@
 #include "led.h"
 #include "stopwatch.h"
 
-#ifndef DEBUG_ARTNET
+#if DEBUG_ARTNET
 #undef DLOG
 #undef DLOGLN
 #undef DLOGF

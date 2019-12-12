@@ -8,19 +8,9 @@
 #define FASTLED_INTERRUPT_RETRY_COUNT 1
 #define FASTLED_ESP32_I2S 1
 #include <FastLED.h>
-#include <NeoPixelBus.h>
 
 #include "config.h"
 typedef CRGBArray<MATRIX_SIZE> NeoPixelStrip;
-
-// typedef NeoMosaic<ColumnMajorAlternatingTilePreference> Mosaic;
-typedef NeoTiles<ColumnMajorAlternatingLayout , RowMajorLayout> Mosaic;
-
-class FastLedController;
-class NeoPixelBusController;
-
-// Change this between FastLedController or NeoPixelBusController to change implementation
-typedef FastLedController DefaultLedLibrary;
 
 class LedController
 {

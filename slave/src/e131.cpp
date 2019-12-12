@@ -1,3 +1,4 @@
+#if 0
 
 #include <ESPAsyncE131.h>
 
@@ -5,7 +6,7 @@
 #include "log.h"
 #include "led_controller.h"
 
-#ifndef DEBUG_E131
+#if DEBUG_E131
 #undef DLOG
 #undef DLOGLN
 #undef DLOGF
@@ -71,3 +72,5 @@ void tick_e131()
       LEDs().Update();
    }
 }
+
+#endif

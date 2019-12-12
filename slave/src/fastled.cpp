@@ -72,7 +72,7 @@ void FastLedController::Setup()
    FastLED.clearData();
 
    // set max power to 30 amps * 5v
-   FastLED.setMaxPowerInVoltsAndMilliamps(5, 30000);
+   FastLED.setMaxPowerInVoltsAndMilliamps(5, POWER_AMPS * 1000);
 
    _impl->firstTick = true;
    _impl->xMutex = xSemaphoreCreateMutex();
