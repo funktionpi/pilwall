@@ -1,9 +1,10 @@
 package layout
 
 import (
-  "bytes"
-  "image"
-  "github.com/draeron/gopkg/color"
+	"bytes"
+	"image"
+
+	"github.com/draeron/gopkg/color"
 )
 
 type Mosaic struct {
@@ -62,7 +63,7 @@ func (t Mosaic) calculate(x, y uint16, pLocalIndex *uint16, pTileOffset *uint16)
 */
 func (t Mosaic) Slice(img image.Image) []color.Color {
 	size := img.Bounds().Size()
-	out := make([]color.Color, size.X * size.Y)
+	out := make([]color.Color, size.X*size.Y)
 
 	for x := img.Bounds().Min.X; x < img.Bounds().Max.X; x++ {
 		for y := img.Bounds().Min.Y; y < img.Bounds().Max.Y; y++ {
@@ -70,8 +71,8 @@ func (t Mosaic) Slice(img image.Image) []color.Color {
 			// recalibrate to 0 based coord
 			x -= img.Bounds().Min.X
 			y -= img.Bounds().Min.Y
-			idx := t.Map(uint16(x),uint16(y))
-      out[idx] = col
+			idx := t.Map(uint16(x), uint16(y))
+			out[idx] = col
 		}
 	}
 	return out
@@ -79,14 +80,14 @@ func (t Mosaic) Slice(img image.Image) []color.Color {
 
 /*
   Transform an image into a serie of bytes
- */
+*/
 func (t Mosaic) SliceToBytes(img image.Image) []byte {
-  buf := bytes.Buffer{}
-  for _, col := range t.Slice(img) {
-    rgb := col.RGB()
-    buf.WriteByte(rgb.R)
-    buf.WriteByte(rgb.G)
-    buf.WriteByte(rgb.B)
-  }
-  return buf.Bytes()
+	buf := bytes.Buffer{}
+	for _, col := range t.Slice(img) {
+		rgb := col.RGB()
+		buf.WriteByte(rgb.R)
+		buf.WriteByte(rgb.G)
+		buf.WriteByte(rgb.B)
+	}
+	return buf.Bytes()
 }

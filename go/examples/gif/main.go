@@ -2,17 +2,17 @@ package main
 
 import (
 	"fmt"
-	"github/draeron/pileds/go/pkg/api/pi-proto"
 	"image/gif"
-	"github/draeron/pileds/go/pkg/discovery"
-	"github/draeron/pileds/go/pkg/layout"
-	"github/draeron/pileds/go/pkg/pi-leds"
 	"net"
 	"os"
 	"os/signal"
 	"sync"
 	"time"
 
+	"github.com/draeron/pi-leds/go/pkg/api/pi-proto"
+	"github.com/draeron/pi-leds/go/pkg/discovery"
+	"github.com/draeron/pi-leds/go/pkg/layout"
+	"github.com/draeron/pi-leds/go/pkg/pi-leds"
 	"github.com/draeron/gopkg/color"
 	"github.com/draeron/gopkg/errors"
 	"github.com/fogleman/gg"
@@ -41,7 +41,7 @@ func main() {
 	}
 	mosaic.Height()
 
-	client, err := pi_leds.ConnectProto(svr.Ip, svr.Port)
+	client, err := pileds.ConnectProto(svr.Ip, svr.Port)
 	errors.ExitIfErr(err)
 	defer client.Close()
 
@@ -53,17 +53,16 @@ func main() {
 
 	fmt.Printf("screen dimension is %dx%d\n", dimension.Width, dimension.Height)
 
+	playGif(client, dimension)
 	//scrobe(client)
 	//scanLines(client, dimension)
-	playGif(client, dimension)
 	//drawTest(client, dimension)
 	//drawHue(client)
 	// drawGradient(client, dimension)
-
 	//WaitForCtrlC()
 }
 
-func drawGradient(client pi_leds.Client, dimension *pi_proto.DimensionResponse) {
+func drawGradient(client pileds.Client, dimension *pi_proto.DimensionResponse) {
 	rgb := color.Black.RGB()
 
 	client.SetBrightness(255)
@@ -75,7 +74,7 @@ func drawGradient(client pi_leds.Client, dimension *pi_proto.DimensionResponse) 
 	client.UpdateScreen()
 }
 
-func drawHue(client *pi_leds.ProtoClient) {
+func drawHue(client *pileds.ProtoClient) {
 	hue := color.Red.HSL()
 
 	for {
@@ -87,7 +86,7 @@ func drawHue(client *pi_leds.ProtoClient) {
 
 }
 
-func drawTest(client *pi_leds.ProtoClient, dimension *pi_proto.DimensionResponse) {
+func drawTest(client *pileds.ProtoClient, dimension *pi_proto.DimensionResponse) {
 	err := client.Clear(color.Yellow)
 	errors.PrintIfErr(err)
 
@@ -117,7 +116,7 @@ func drawTest(client *pi_leds.ProtoClient, dimension *pi_proto.DimensionResponse
 	WaitForCtrlC()
 }
 
-func playGif(client pi_leds.Client, dimension *pi_proto.DimensionResponse) {
+func playGif(client pileds.Client, dimension *pi_proto.DimensionResponse) {
 
 	fh, err := os.Open("gif/Blinky2.gif")
 	//fh, err := os.Open("gif/blocks1.gif")
@@ -162,7 +161,7 @@ func playGif(client pi_leds.Client, dimension *pi_proto.DimensionResponse) {
 	}
 }
 
-func scanLines(client pi_leds.Client, dimension *pi_proto.DimensionResponse) {
+func scanLines(client pileds.Client, dimension *pi_proto.DimensionResponse) {
 	colors := []color.Color{
 		color.Red,
 		color.Green,
@@ -205,7 +204,7 @@ func scanLines(client pi_leds.Client, dimension *pi_proto.DimensionResponse) {
 	}
 }
 
-func scrobe(client pi_leds.Client) {
+func scrobe(client pileds.Client) {
 	colors := []color.Color{color.Black, color.White, color.Black, color.Red, color.Black, color.Blue, color.Black, color.Green}
 
 	idx := 0

@@ -1,15 +1,15 @@
-package pi_leds
+package pileds
 
 import (
 	"encoding/binary"
 	"fmt"
-	"github/draeron/pileds/go/pkg/api/pi-proto"
-	"github/draeron/pileds/go/pkg/layout"
 	"image"
 	"net"
 	"sync"
 	"time"
 
+	"github.com/draeron/pi-leds/go/pkg/api/pi-proto"
+	"github.com/draeron/pi-leds/go/pkg/layout"
 	"github.com/draeron/gopkg/chrono"
 	"github.com/draeron/gopkg/color"
 	"github.com/draeron/gopkg/errors"
@@ -87,7 +87,7 @@ func (c *ProtoClient) SetBrightness(brightness uint8) error {
 		Brightness: int32(brightness),
 	}}
 
-	_, err := c.WaitForResponse(c.send(&pi_proto.Request{Request:&req}))
+	_, err := c.WaitForResponse(c.send(&pi_proto.Request{Request: &req}))
 	return err
 }
 
@@ -98,13 +98,13 @@ func (c *ProtoClient) Clear(color color.Color) error {
 	req := pi_proto.Request_Clear{&pi_proto.ClearRequest{
 		Color: val,
 	}}
-	_, err := c.WaitForResponse(c.send(&pi_proto.Request{Request:&req}))
+	_, err := c.WaitForResponse(c.send(&pi_proto.Request{Request: &req}))
 	return err
 }
 
 func (c *ProtoClient) GetDimension() (*pi_proto.DimensionResponse, error) {
 	req := pi_proto.Request_Dimension{&pi_proto.DimensionRequest{}}
-	msg, err := c.WaitForResponse(c.send(&pi_proto.Request{Request:&req}))
+	msg, err := c.WaitForResponse(c.send(&pi_proto.Request{Request: &req}))
 	if err != nil {
 		return nil, err
 	}
@@ -122,7 +122,7 @@ func (c *ProtoClient) UpdateScreen() error {
 		Update: &pi_proto.UpdateRequest{},
 	}
 
-	_, err := c.WaitForResponse(c.send(&pi_proto.Request{Request:req}))
+	_, err := c.WaitForResponse(c.send(&pi_proto.Request{Request: req}))
 	return err
 }
 
@@ -136,7 +136,7 @@ func (c *ProtoClient) DrawLine(x1, y1, x2, y2 int16, rgba color.Color) error {
 		End:   convertCoord(x2, y2),
 	}}
 
-	_, err := c.WaitForResponse(c.send(&pi_proto.Request{Request:&req}))
+	_, err := c.WaitForResponse(c.send(&pi_proto.Request{Request: &req}))
 	return err
 }
 
@@ -169,7 +169,7 @@ func (c *ProtoClient) DrawImgRaw(img image.Image, mosaic layout.Mosaic) error {
 
 		sw.Start()
 		reqcount++
-		_, err := c.WaitForResponse(c.send(&pi_proto.Request{Request:&req}))
+		_, err := c.WaitForResponse(c.send(&pi_proto.Request{Request: &req}))
 		//_, err := c.send(&req)
 		sw.Stop()
 
@@ -215,7 +215,7 @@ func (c *ProtoClient) DrawImg(img image.Image) error {
 			if len(req.Pixels.Pixels) > 0 && (len(req.Pixels.Pixels) == maxcount || (x == w-1 && y == h-1)) {
 				//fmt.Printf("sending packet, size %d, %d pixels\n", size, len(req.Pixels.Pixels))
 				sw.Start()
-				_, err := c.WaitForResponse(c.send(&pi_proto.Request{Request:&req}))
+				_, err := c.WaitForResponse(c.send(&pi_proto.Request{Request: &req}))
 				//_, _, err := c.send(req)
 				reqcount++
 				pixcount += len(req.Pixels.Pixels)

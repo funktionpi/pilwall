@@ -4,7 +4,7 @@ import "image"
 
 type Topology struct {
 	Dimension image.Point
-	Layout        Layout
+	Layout    Layout
 }
 
 func (t Topology) Map(x, y uint16) uint16 {

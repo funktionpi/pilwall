@@ -1,4 +1,4 @@
-module github/draeron/pileds
+module github.com/draeron/pi-leds/go
 
 go 1.13
 
