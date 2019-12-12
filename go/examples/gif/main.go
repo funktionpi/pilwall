@@ -39,42 +39,23 @@ func main() {
 			Layout:    layout.MustParseLayout(svr.PanelLayout),
 		},
 	}
-	mosaic.Height()
 
 	client, err := pileds.ConnectProto(svr.Ip, svr.Port)
+	//client, err := pileds.ConnectTpm2(svr.Ip, mosaic)
+	//client, err := pileds.ConnectArtnet(svr.Ip, mosaic)
 	errors.ExitIfErr(err)
 	defer client.Close()
 
 	err = client.SetBrightness(8)
 	errors.ExitIfErr(err)
 
-	dimension, err := client.GetDimension()
-	errors.ExitIfErr(err)
+	fmt.Printf("screen dimension is %dx%d\n", mosaic.Width(), mosaic.Height())
 
-	fmt.Printf("screen dimension is %dx%d\n", dimension.Width, dimension.Height)
-
-	playGif(client, dimension)
-	//scrobe(client)
-	//scanLines(client, dimension)
-	//drawTest(client, dimension)
-	//drawHue(client)
-	// drawGradient(client, dimension)
+	playGif(client, mosaic)
 	//WaitForCtrlC()
 }
 
-func drawGradient(client pileds.Client, dimension *pi_proto.DimensionResponse) {
-	rgb := color.Black.RGB()
-
-	client.SetBrightness(255)
-
-	for x := int16(0); x < int16(dimension.Width); x++ {
-		client.DrawLine(x, 0, x, int16(dimension.Height), rgb)
-		rgb.B += (256 / 64)
-	}
-	client.UpdateScreen()
-}
-
-func drawHue(client *pileds.ProtoClient) {
+func drawHue(client *pileds.Proto) {
 	hue := color.Red.HSL()
 
 	for {
@@ -86,7 +67,7 @@ func drawHue(client *pileds.ProtoClient) {
 
 }
 
-func drawTest(client *pileds.ProtoClient, dimension *pi_proto.DimensionResponse) {
+func drawTest(client *pileds.Proto, dimension *pi_proto.DimensionResponse) {
 	err := client.Clear(color.Yellow)
 	errors.PrintIfErr(err)
 
@@ -116,9 +97,9 @@ func drawTest(client *pileds.ProtoClient, dimension *pi_proto.DimensionResponse)
 	WaitForCtrlC()
 }
 
-func playGif(client pileds.Client, dimension *pi_proto.DimensionResponse) {
+func playGif(client pileds.Client, mosaic layout.Mosaic) {
 
-	fh, err := os.Open("gif/Blinky2.gif")
+	fh, err := os.Open("Blinky2.gif")
 	//fh, err := os.Open("gif/blocks1.gif")
 	errors.ExitIfErr(err)
 
@@ -128,8 +109,8 @@ func playGif(client pileds.Client, dimension *pi_proto.DimensionResponse) {
 	err = client.Clear(color.Black)
 	errors.PrintIfErr(err)
 
-	w := int(dimension.Width)
-	h := int(dimension.Height)
+	w := int(mosaic.Width())
+	h := int(mosaic.Height())
 
 	ctx := gg.NewContext(w, h)
 
@@ -158,49 +139,6 @@ func playGif(client pileds.Client, dimension *pi_proto.DimensionResponse) {
 
 			<-ch
 		}
-	}
-}
-
-func scanLines(client pileds.Client, dimension *pi_proto.DimensionResponse) {
-	colors := []color.Color{
-		color.Red,
-		color.Green,
-		color.Blue,
-	}
-
-	horizontal := true
-	it := int16(0)
-	col := 0
-
-	for {
-		err := client.Clear(colors[col])
-		errors.PrintIfErr(err)
-
-		count := dimension.Width
-		if !horizontal {
-			count = dimension.Height
-		}
-
-		if horizontal {
-			err = client.DrawLine(it, 0, it, int16(dimension.Height), color.White)
-			errors.PrintIfErr(err)
-		} else {
-			err = client.DrawLine(0, it, int16(dimension.Width), it, color.White)
-			errors.PrintIfErr(err)
-		}
-
-		it++
-
-		if it >= int16(count) {
-			horizontal = !horizontal
-			it = 0
-			col = (col + 1) % len(colors)
-		}
-
-		err = client.UpdateScreen()
-		errors.PrintIfErr(err)
-
-		//time.Sleep(time.Second / 10)
 	}
 }
 

@@ -6,7 +6,7 @@
 #include "led_controller.h"
 #include "cmd_processor.h"
 
-#if DEBUG_CMD
+#if !DEBUG_CMD
 #undef DLOG
 #undef DLOGLN
 #undef DLOGF

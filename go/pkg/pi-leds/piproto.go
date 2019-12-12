@@ -8,11 +8,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/draeron/pi-leds/go/pkg/api/pi-proto"
-	"github.com/draeron/pi-leds/go/pkg/layout"
 	"github.com/draeron/gopkg/chrono"
 	"github.com/draeron/gopkg/color"
 	"github.com/draeron/gopkg/errors"
+	"github.com/draeron/pi-leds/go/pkg/api/pi-proto"
+	"github.com/draeron/pi-leds/go/pkg/layout"
 	"github.com/fogleman/gg"
 
 	"github.com/golang/protobuf/proto"
@@ -20,7 +20,7 @@ import (
 
 //go:generate protoc -I ../../../slave/lib/proto -I $NANOPB/generator/proto --go_out=../api/pi-proto pi.proto
 
-type ProtoClient struct {
+type Proto struct {
 	udpsock net.Conn
 
 	lastImg   image.Image
@@ -28,10 +28,10 @@ type ProtoClient struct {
 	next      int32
 }
 
-func ConnectProto(ip net.IP, port int) (*ProtoClient, error) {
-	c := &ProtoClient{
-		next: 1,
-	}
+func ConnectProto(ip net.IP, port int) (*Proto, error) {
+		c := &Proto{
+			next: 1,
+		}
 
 	fmt.Printf("connecting to pi-leds '%s'\n", ip.String())
 	conn, err := net.DialTimeout("udp", fmt.Sprintf("%s:%d", ip.String(), port), time.Second*3)
@@ -44,12 +44,12 @@ func ConnectProto(ip net.IP, port int) (*ProtoClient, error) {
 	return c, nil
 }
 
-func (c *ProtoClient) Close() {
+func (c *Proto) Close() {
 	err := c.udpsock.Close()
 	errors.PrintIfErr(err)
 }
 
-func (c *ProtoClient) processResponse() {
+func (c *Proto) processResponse() {
 	for {
 		var err error
 		buf := []byte{}
@@ -80,7 +80,7 @@ func (c *ProtoClient) processResponse() {
 	}
 }
 
-func (c *ProtoClient) SetBrightness(brightness uint8) error {
+func (c *Proto) SetBrightness(brightness uint8) error {
 	//fmt.Printf("setting brightness to %d\n", brightness)
 
 	req := pi_proto.Request_Brightness{&pi_proto.BrightnessRequest{
@@ -91,7 +91,7 @@ func (c *ProtoClient) SetBrightness(brightness uint8) error {
 	return err
 }
 
-func (c *ProtoClient) Clear(color color.Color) error {
+func (c *Proto) Clear(color color.Color) error {
 	val := convertColor(color)
 	fmt.Printf("Clear color: %v\n", color.RGB())
 
@@ -102,7 +102,7 @@ func (c *ProtoClient) Clear(color color.Color) error {
 	return err
 }
 
-func (c *ProtoClient) GetDimension() (*pi_proto.DimensionResponse, error) {
+func (c *Proto) GetDimension() (*pi_proto.DimensionResponse, error) {
 	req := pi_proto.Request_Dimension{&pi_proto.DimensionRequest{}}
 	msg, err := c.WaitForResponse(c.send(&pi_proto.Request{Request: &req}))
 	if err != nil {
@@ -117,7 +117,7 @@ func (c *ProtoClient) GetDimension() (*pi_proto.DimensionResponse, error) {
 	return pkg.Dimension, nil
 }
 
-func (c *ProtoClient) UpdateScreen() error {
+func (c *Proto) UpdateScreen() error {
 	req := &pi_proto.Request_Update{
 		Update: &pi_proto.UpdateRequest{},
 	}
@@ -126,7 +126,7 @@ func (c *ProtoClient) UpdateScreen() error {
 	return err
 }
 
-func (c *ProtoClient) DrawLine(x1, y1, x2, y2 int16, rgba color.Color) error {
+func (c *Proto) DrawLine(x1, y1, x2, y2 int16, rgba color.Color) error {
 	col := convertColor(rgba)
 	fmt.Printf("Line from (%d,%d) to (%d,%d) => Color: %v\n", x1, y1, x2, y2, rgba)
 
@@ -140,7 +140,7 @@ func (c *ProtoClient) DrawLine(x1, y1, x2, y2 int16, rgba color.Color) error {
 	return err
 }
 
-func (c *ProtoClient) DrawImgRaw(img image.Image, mosaic layout.Mosaic) error {
+func (c *Proto) DrawImgRaw(img image.Image, mosaic layout.Mosaic) error {
 	raw := mosaic.SliceToBytes(img)
 	index := 0
 
@@ -184,7 +184,7 @@ func (c *ProtoClient) DrawImgRaw(img image.Image, mosaic layout.Mosaic) error {
 	return nil
 }
 
-func (c *ProtoClient) DrawImg(img image.Image) error {
+func (c *Proto) DrawImg(img image.Image) error {
 	req := pi_proto.Request_Pixels{&pi_proto.PixelsRequest{
 		Pixels: []*pi_proto.PixelColor{},
 	}}
@@ -243,7 +243,7 @@ func (c *ProtoClient) DrawImg(img image.Image) error {
 	return nil
 }
 
-func (c *ProtoClient) WaitForResponse(respChan <-chan *pi_proto.Response, id int32, err error) (*pi_proto.Response, error) {
+func (c *Proto) WaitForResponse(respChan <-chan *pi_proto.Response, id int32, err error) (*pi_proto.Response, error) {
 	if err != nil {
 		return nil, err
 	}
@@ -259,7 +259,7 @@ func (c *ProtoClient) WaitForResponse(respChan <-chan *pi_proto.Response, id int
 	}
 }
 
-func (c *ProtoClient) send(req *pi_proto.Request) (<-chan *pi_proto.Response, int32, error) {
+func (c *Proto) send(req *pi_proto.Request) (<-chan *pi_proto.Response, int32, error) {
 	req.Id = c.next
 	defer func() { c.next++ }()
 

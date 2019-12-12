@@ -9,7 +9,7 @@
 #include "log.h"
 #include "led_controller.h"
 
-#if DEBUG_OPC
+#if !DEBUG_OPC
    #undef DLOG
    #undef DLOGLN
    #undef DLOGF

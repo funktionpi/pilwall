@@ -40,21 +40,28 @@ func (t Mosaic) Map(x, y uint16) uint16 {
 }
 
 func (t Mosaic) Width() uint16 {
-	return t.PanelTopo.Width * uint16(t.TileSize.X)
+	return uint16(t.PanelTopo.Dimension.X * t.TileSize.X)
 }
 
 func (t Mosaic) Height() uint16 {
-	return t.PanelTopo.Height * uint16(t.TileSize.Y)
+	return uint16(t.PanelTopo.Dimension.Y * t.TileSize.Y)
+}
+
+func (t Mosaic) Count() uint16 {
+	return t.Width() * t.Height()
 }
 
 func (t Mosaic) calculate(x, y uint16, pLocalIndex *uint16, pTileOffset *uint16) {
-	tileX := x / t.PanelTopo.Width
-	topoX := x % t.PanelTopo.Width
+	width := uint16(t.PanelTopo.Dimension.X)
+	height := uint16(t.PanelTopo.Dimension.Y)
 
-	tileY := y / t.PanelTopo.Height
-	topoY := y % t.PanelTopo.Height
+	tileX := x / width
+	topoX := x % width
 
-	*pTileOffset = t.TileTopo.Map(uint16(t.TileSize.X), uint16(t.TileSize.Y), tileX, tileY) * t.PanelTopo.Width * t.PanelTopo.Height
+	tileY := y / height
+	topoY := y % height
+
+	*pTileOffset = t.TileTopo.Map(uint16(t.TileSize.X), uint16(t.TileSize.Y), tileX, tileY) * width * height
 	*pLocalIndex = t.PanelTopo.Map(topoX, topoY)
 }
 

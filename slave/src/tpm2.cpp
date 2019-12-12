@@ -7,7 +7,7 @@
 #include "log.h"
 #include "udp.h"
 
-#if DEBUG_TPM2
+#if !DEBUG_TPM2
    #undef DLOG
    #undef DLOGLN
    #undef DLOGF

@@ -5,13 +5,13 @@
 #define HOSTNAME "ledwall-64x16"
 #define BONJOUR_NAME "ledwall-64x16"
 
-// #define SERIAL_DEBUG
+#define SERIAL_DEBUG
 #define DEBUG_PROTO 0
 #define DEBUG_CMD 0
-#define DEBUG_ARTNET 1
+#define DEBUG_ARTNET 0
 #define DEBUG_OPC 0
 #define DEBUG_E131 0
-#define DEBUG_TPM2 1
+#define DEBUG_TPM2 0
 
 #define PROTO_PORT 2001
 #define OPC_PORT 7890

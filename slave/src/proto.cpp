@@ -12,7 +12,7 @@
 #include "log.h"
 #include "cmd_processor.h"
 
-#if DEBUG_PROTO
+#if !DEBUG_PROTO
    #undef DLOG
    #undef DLOGLN
    #undef DLOGF

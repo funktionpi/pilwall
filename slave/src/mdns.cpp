@@ -5,6 +5,8 @@
 #include <ESP8266mDNS.h>
 #endif
 
+#include <FastLED.h>
+
 #include "log.h"
 #include "config.h"
 
@@ -14,9 +16,13 @@ char panel_width[4];
 char panel_height[4];
 char tile_width[4];
 char tile_height[4];
+char bytes_count[2];
 
 void setup_txt_entry(const char* service, const char* protocol)
 {
+   ESP_ERROR_CHECK(mdns_service_txt_item_set(service, protocol, "pixels_bytes", bytes_count));
+   ESP_ERROR_CHECK(mdns_service_txt_item_set(service, protocol, "colors_order", "RGB"));
+
    ESP_ERROR_CHECK(mdns_service_txt_item_set(service, protocol, "matrix_width", matrix_width));
    ESP_ERROR_CHECK(mdns_service_txt_item_set(service, protocol, "matrix_height", matrix_height));
 
@@ -41,6 +47,7 @@ void setup_mdns()
    sprintf(panel_height, "%d", MATRIX_TILE_HEIGHT);
    sprintf(tile_width, "%d", MATRIX_TILE_H);
    sprintf(tile_height, "%d", MATRIX_TILE_V);
+   sprintf(bytes_count, "%d", sizeof(CRGB));
 
    //set hostname
    ESP_ERROR_CHECK(mdns_hostname_set(BONJOUR_NAME));
