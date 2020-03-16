@@ -1,5 +1,7 @@
 #include "config.h"
 
+#if ENABLE_ARTNET
+
 #include <Artnet.h>
 
 #include "led_controller.h"
@@ -44,11 +46,7 @@ void onDmxFrame(uint8_t universe, uint8_t *data, uint16_t length)
       ledCount = ledsPerUniverse;
    }
    DLOGF("[ARTNET] writing to index %d, led count : %d\n", index, ledCount);
-   LEDs().Lock();
    LEDs().CopyRaw(index, data, ledCount);
-   LEDs().Unlock();
-
-   // DLOGLN("[ARTNET] sending update");
    LEDs().Update();
 
    artnet_sw.stop();
@@ -79,8 +77,10 @@ void tick_artnet()
    {
       if (artnet_sw.runs())
       {
-         LOGF("[ARTNET] took average of %d ms to process %d packets\n", artnet_sw.averagems(), artnet_sw.runs());
+         LOGF("[ARTNET] took average of %d us to process %d packets\n", artnet_sw.average(), artnet_sw.runs());
          artnet_sw.reset();
       }
    }
 }
+
+#endif

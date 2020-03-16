@@ -1,4 +1,3 @@
-
 #ifdef ESP32
 #include <ESPmDNS.h>
 #elif defined(ESP8266)
@@ -18,7 +17,7 @@ char tile_width[4];
 char tile_height[4];
 char bytes_count[2];
 
-void setup_txt_entry(const char* service, const char* protocol)
+void setup_txt_entry(const char *service, const char *protocol)
 {
    ESP_ERROR_CHECK(mdns_service_txt_item_set(service, protocol, "pixels_bytes", bytes_count));
    ESP_ERROR_CHECK(mdns_service_txt_item_set(service, protocol, "colors_order", "RGB"));

@@ -56,9 +56,7 @@ void process_message(const uint8_t *data, size_t len, piproto_Response &response
    {
       auto count = msg.request.raw.pixels_count * 4 / 3;
       DLOGF("[PB] received a raw pixel request, index: %d, count: %d\n", msg.request.raw.index, count);
-      LEDs().Lock();
       LEDs().CopyRaw(msg.request.raw.index, (uint8_t *)msg.request.raw.pixels, count);
-      LEDs().Unlock();
       break;
    }
    case piproto_Request_clear_tag:
@@ -67,15 +65,12 @@ void process_message(const uint8_t *data, size_t len, piproto_Response &response
       auto color = CRGB(msg.request.clear.color);
       DLOGF("[PB] Clear color to (r: %d, g: %d, b: %d)\n", color.red, color.green, color.blue);
 
-      LEDs().Lock();
       LEDs().Clear(color);
-      LEDs().Unlock();
       break;
    }
    case piproto_Request_pixels_tag:
    {
       DLOGF("[PB] received with %d pixels request\n", msg.request.pixels.pixels_count);
-      LEDs().Lock();
       for (int it = 0; it < msg.request.pixels.pixels_count; ++it)
       {
          auto pixel = msg.request.pixels.pixels[it];
@@ -84,7 +79,6 @@ void process_message(const uint8_t *data, size_t len, piproto_Response &response
          auto color = fromProtoColor(pixel.color);
          LEDs().SetPixel(x, y, color);
       }
-      LEDs().Unlock();
       break;
    }
    case piproto_Request_draw_line_tag:
@@ -98,9 +92,7 @@ void process_message(const uint8_t *data, size_t len, piproto_Response &response
 
       auto color = (msg.request.draw_line.color);
 
-      LEDs().Lock();
       LEDs().DrawLine(x1, y1, x2, y2, color);
-      LEDs().Unlock();
       break;
    }
    case piproto_Request_brightness_tag:

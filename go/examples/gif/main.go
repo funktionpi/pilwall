@@ -9,10 +9,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/draeron/pi-leds/go/pkg/api/pi-proto"
-	"github.com/draeron/pi-leds/go/pkg/discovery"
-	"github.com/draeron/pi-leds/go/pkg/layout"
-	"github.com/draeron/pi-leds/go/pkg/pi-leds"
+	"github.com/funktionpi/pilwall/go/pkg/api/pi-proto"
+	"github.com/funktionpi/pilwall/go/pkg/discovery"
+	"github.com/funktionpi/pilwall/go/pkg/layout"
+	"github.com/funktionpi/pilwall/go/pkg/pi-leds"
 	"github.com/draeron/gopkg/color"
 	"github.com/draeron/gopkg/errors"
 	"github.com/fogleman/gg"
@@ -35,7 +35,7 @@ func main() {
 		TileSize: svr.TileCount,
 		TileTopo: layout.MustParseLayout(svr.TileLayout),
 		PanelTopo: layout.Topology{
-			Dimension: svr.PanelDimension,
+			Dimension: svr.TileDimension,
 			Layout:    layout.MustParseLayout(svr.PanelLayout),
 		},
 	}

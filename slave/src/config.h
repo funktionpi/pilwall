@@ -5,7 +5,10 @@
 #define HOSTNAME "ledwall-64x16"
 #define BONJOUR_NAME "ledwall-64x16"
 
+#ifndef RELEASE
 #define SERIAL_DEBUG
+#endif
+
 #define DEBUG_PROTO 0
 #define DEBUG_CMD 0
 #define DEBUG_ARTNET 0
@@ -20,7 +23,7 @@
 #define TPM2_OUT_PORT 65442
 
 #define ENABLE_ARTNET 1
-#define ENABLE_E131 0
+#define ENABLE_E131 1
 #define ENABLE_PROTO 1
 #define ENABLE_OPC 0
 #define ENABLE_TPM2 1
@@ -33,7 +36,7 @@
 #define PIN_3 32
 
 // amount of amps @ 5v
-#define POWER_AMPS 30
+#define POWER_AMPS 50
 
 const int PINS[] = {PIN_0, PIN_1, PIN_2, PIN_3};
 

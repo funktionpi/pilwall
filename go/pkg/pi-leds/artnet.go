@@ -3,7 +3,7 @@ package pileds
 import (
 	"fmt"
 	"github.com/draeron/gopkg/color"
-	"github.com/draeron/pi-leds/go/pkg/layout"
+	"github.com/funktionpi/pilwall/go/pkg/layout"
 	"github.com/jsimonetti/go-artnet/packet"
 	"image"
 	"net"

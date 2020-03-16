@@ -1,1 +1,1 @@
-@C:\tools\nanopb\generator-bin\protoc -I %NANOPB%\generator\proto -I . --nanopb_out=src pi.proto
+@protoc --plugin=protoc-gen-nanopb=%NANOPB%/generator/protoc-gen-nanopb.bat -I %NANOPB%\generator\proto -I . --nanopb_out=src pi.proto

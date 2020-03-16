@@ -1,3 +1,7 @@
+#include "config.h"
+
+#if ENABLE_PROTO
+
 #include <Arduino.h>
 #include <WiFiUdp.h>
 
@@ -40,7 +44,7 @@ void on_proto_packet(const uint8_t* data, int length, WiFiUDP* svr)
 
    if (outlen > 0)
    {
-      if (!svr->beginPacket())
+      if (!svr->beginPacket(svr->remoteIP(), svr->remotePort()))
       {
          LOGLN("[PROTO] could not write response packet");
       }
@@ -67,3 +71,5 @@ void tick_proto()
 {
    proto_udp.tick();
 }
+
+#endif

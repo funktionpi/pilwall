@@ -118,9 +118,10 @@ void NeoPixelBusController::Clear(CRGB _color)
       _impl->strip3->ClearTo(color);
 }
 
-void NeoPixelBusController::Lock()
+bool NeoPixelBusController::Lock(bool wait = false)
 {
-   xSemaphoreTake(_impl->xMutex, portMAX_DELAY);
+   auto timeout = wait ? portMAX_DELAY : pdMS_TO_TICKS(10);
+   return xSemaphoreTake(_impl->xMutex, timeout) == pdTRUE;
 }
 
 void NeoPixelBusController::Unlock()

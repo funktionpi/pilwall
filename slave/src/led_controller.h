@@ -4,9 +4,11 @@
 
 // #define FASTLED_RMT_MAX_CHANNELS 4
 // #define FASTLED_RMT_BUILTIN_DRIVER 1
-#define FASTLED_ALLOW_INTERRUPTS 0
-#define FASTLED_INTERRUPT_RETRY_COUNT 1
-#define FASTLED_ESP32_I2S 1
+// #define FASTLED_RMT_BUILTIN_DRIVER 1
+// #define FASTLED_ALLOW_INTERRUPTS 0
+// #define FASTLED_INTERRUPT_RETRY_COUNT 1
+// #define FASTLED_ESP32_FLASH_LOCK 1
+#define FASTLED_ESP32_I2S true
 #include <FastLED.h>
 
 #include "config.h"
@@ -26,7 +28,7 @@ public:
    virtual void Update() = 0;
    virtual void CopyRaw(int index, const uint8_t *src, int len) = 0;
 
-   virtual void Lock() = 0;
+   virtual bool Lock(bool block = true) = 0;
    virtual void Unlock() = 0;
 
    virtual void DrawLine(int x1, int y1, int x2, int y2, CRGB col);
@@ -54,7 +56,7 @@ public:
    void Tick();
    void Update();
 
-   void Lock();
+   bool Lock(bool wait);
    void Unlock();
 
    void Task();
@@ -80,7 +82,7 @@ public:
    void Tick();
    void Update();
 
-   void Lock();
+   bool Lock(bool wait);
    void Unlock();
 
    void LoopTask();

@@ -11,8 +11,8 @@ import (
 	"github.com/draeron/gopkg/chrono"
 	"github.com/draeron/gopkg/color"
 	"github.com/draeron/gopkg/errors"
-	"github.com/draeron/pi-leds/go/pkg/api/pi-proto"
-	"github.com/draeron/pi-leds/go/pkg/layout"
+	"github.com/funktionpi/pilwall/go/pkg/api/pi-proto"
+	"github.com/funktionpi/pilwall/go/pkg/layout"
 	"github.com/fogleman/gg"
 
 	"github.com/golang/protobuf/proto"

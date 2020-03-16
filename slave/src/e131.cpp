@@ -1,12 +1,14 @@
-#if 0
+#include "config.h"
+
+#if ENABLE_E131
 
 #include <ESPAsyncE131.h>
 
-#include "config.h"
 #include "log.h"
 #include "led_controller.h"
+#include "stopwatch.h"
 
-#if DEBUG_E131
+#if !DEBUG_E131
 #undef DLOG
 #undef DLOGLN
 #undef DLOGF
@@ -15,12 +17,13 @@
 #define DLOGF(...)
 #endif
 
-const int startUniverse = 1;
-const int ledsPerUniverse = 128;
-const int channelsPerUniverse = ledsPerUniverse * 3;
-const int maxUniverses = MATRIX_SIZE / ledsPerUniverse;
+static const int startUniverse = 1;
+static const int ledsPerUniverse = 128;
+static const int channelsPerUniverse = ledsPerUniverse * 3;
+static const int maxUniverses = MATRIX_SIZE / ledsPerUniverse;
 
-ESPAsyncE131 e131(maxUniverses);
+static ESPAsyncE131 e131(maxUniverses);
+static StopWatch sw;
 
 void setup_e131()
 {
@@ -30,21 +33,14 @@ void setup_e131()
    {
       LOGF("[E131] listening for ACN e131 on port %d\n", E131_DEFAULT_PORT);
    }
-
-   //   if (e131.begin(E131_MULTICAST, UNIVERSE, UNIVERSE_COUNT))   // Listen via Multicast
-   //    {
-   //       Serial.println(F("Listening for data..."));
-   //    }
-   //    else
-   //    {
-   //       Serial.println(F("*** e131.begin failed ***"));
-   //    }
+   sw.reset();
 }
 
 void tick_e131()
 {
-   if (!e131.isEmpty())
+   while (!e131.isEmpty())
    {
+      sw.start();
       e131_packet_t packet;
       e131.pull(&packet); // Pull packet from ring buffer
 
@@ -66,10 +62,19 @@ void tick_e131()
       auto ledCount = data_length / 3;
       auto index = (universe - startUniverse) * ledsPerUniverse;
       DLOGF("[e131] received data for pixels %d to %d\n", index, index + ledCount);
-      LEDs().Lock();
       LEDs().CopyRaw(index, packet.property_values, ledCount);
-      LEDs().Unlock();
       LEDs().Update();
+
+      sw.stop();
+   }
+
+   EVERY_N_SECONDS(5)
+   {
+      if (sw.runs())
+      {
+         LOGF("[e131] took average of %d us to process %d udp packets\n", sw.average(), sw.runs());
+         sw.reset();
+      }
    }
 }
 

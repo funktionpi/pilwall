@@ -13,7 +13,7 @@ void setup_led()
    LOGF("[LED] Using %d channels with %d pixels for a total of %d pixels\n", LED_CHANNEL_COUNT, LED_CHANNEL_WIDTH, MATRIX_SIZE);
 
    controller.Setup();
-   // controller.SetBrightness(DEFAULT_BRIGHTNESS);
+   // controller.SetBrightness(8);
    controller.Clear(0);
    controller.Update();
 
@@ -32,9 +32,8 @@ CRGB bgCols[] = {CRGB::Red, CRGB::Black, CRGB::Green, CRGB::Black, CRGB::Blue, C
 
 void led_cycle_pixels()
 {
-   EVERY_N_MILLISECONDS(5)
+   EVERY_N_MILLISECONDS(50)
    {
-      controller.Lock();
       controller.Clear(colorToInt(bgCols[col]));
 
       auto count = horizontal ? MATRIX_WIDTH : MATRIX_HEIGHT;
@@ -60,24 +59,25 @@ void led_cycle_pixels()
          col = (col + 1) % (sizeof(bgCols) / sizeof(CRGB));
          // LOGF("[LED] now clearing to (R: %d, G: %d, B: %d)\n", bgCols[col].r, bgCols[col].g, bgCols[col].b);
       }
-
-      controller.Unlock();
       controller.Update();
    }
 }
 
 void led_flash_colors()
 {
-   delay(50);
-   auto color = bgCols[col];
-   controller.Clear(colorToInt(color));
+   EVERY_N_MILLISECONDS(250)
+   {
+      auto color = bgCols[col];
 
-   // controller.DrawLine(0, 0, MATRIX_WIDTH, 0, bgCols[col]);
-   // controller.DrawLine(0, 1, MATRIX_WIDTH, 1, bgCols[col]);
+      controller.Clear(colorToInt(color));
 
-   col = (col + 1) % (sizeof(bgCols) / sizeof(CRGB));
+      // controller.DrawLine(0, 0, MATRIX_WIDTH, 0, bgCols[col]);
+      // controller.DrawLine(0, 1, MATRIX_WIDTH, 1, bgCols[col]);
 
-   controller.Update();
+      col = (col + 1) % (sizeof(bgCols) / sizeof(CRGB));
+
+      controller.Update();
+   }
 }
 
 void tick_led()

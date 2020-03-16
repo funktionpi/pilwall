@@ -1,3 +1,7 @@
+#include "config.h"
+
+#if ENABLE_OPC
+
 #include <WiFi.h>
 #include <WiFiClient.h>
 #include <WiFiServer.h>
@@ -5,7 +9,6 @@
 #undef ARDUINO
 #include <OpcServer.h>
 
-#include "config.h"
 #include "log.h"
 #include "led_controller.h"
 
@@ -43,9 +46,7 @@ void cbOpcMessage(uint8_t channel, uint8_t command, uint16_t length, uint8_t *da
       {
          LOGF("[OPC] data overflow")
       }
-      LEDs().Lock();
       LEDs().CopyRaw(index, data, clength);
-      LEDs().Unlock();
       break;
    }
    // 16 bits rgb
@@ -65,12 +66,13 @@ void cbOpcMessage(uint8_t channel, uint8_t command, uint16_t length, uint8_t *da
 // Callback when a client is connected
 void cbOpcClientConnected(WiFiClient &client)
 {
-   LOGF("[OPC] Client connected:  %s\n", client.remoteIP().toString().c_str());
+   LOGF("[OPC] Client connected\n");
 }
 
 // Callback when a client is disconnected
 void cbOpcClientDisconnected(OpcClient &client)
 {
+
    LOGF("[OPC] Client disconnected: %s\n", client.ipAddress.toString().c_str());
 }
 
@@ -78,7 +80,7 @@ void setup_opc()
 {
    LOGF("[OPC] Setting up opc listener on port %d\n", OPC_PORT);
 
-   wifiServer = new WiFiServer(OPC_PORT, OPC_MAX_CLIENTS);
+   wifiServer = new WiFiServer(OPC_PORT);
 
    opcServer = new OpcServer(*wifiServer,
                              OPC_MAX_CHANNEL,
@@ -100,3 +102,5 @@ void tick_opc()
 {
    opcServer->process();
 }
+
+#endif

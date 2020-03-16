@@ -18,6 +18,8 @@ void rootPage()
 
 void setup_wifi()
 {
+   // LOGF("[WIFI] firmware version: %s\n", WiFi.firmwareVersion());
+
    WiFi.setHostname(HOSTNAME);
    Config.autoReconnect = true;
    Config.hostName = HOSTNAME;

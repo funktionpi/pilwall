@@ -19,7 +19,7 @@ type DnsEntry struct {
 	Port     int
 
 	MatrixDimension image.Point
-	PanelDimension  image.Point
+	TileDimension   image.Point
 	TileCount       image.Point
 
 	PanelLayout string
@@ -55,7 +55,7 @@ func LookupZeroconf() []DnsEntry {
 				Ip:              entry.AddrIPv4[0],
 				Port:            entry.Port,
 				MatrixDimension: fieldPt(entry, MatrixWidth, MatrixHeight),
-				PanelDimension:  fieldPt(entry, PanelWidth, PanelHeight),
+				TileDimension:   fieldPt(entry, PanelWidth, PanelHeight),
 				TileCount:       fieldPt(entry, TilesX, TilesY),
 				PanelLayout:     field(entry, PanelLayout),
 				TileLayout:      field(entry, TileLayout),
