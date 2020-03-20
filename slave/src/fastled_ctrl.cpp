@@ -99,8 +99,10 @@ void FastLedController::setBrightness(int brightness)
 bool FastLedController::lock(bool block)
 {
 #if ENABLE_MUTEX
-   if (!xPortGetCoreID()) _impl->lockCore0Watch.start();
-   else _impl->lockCore1Watch.start();
+   if (!xPortGetCoreID())
+      _impl->lockCore0Watch.start();
+   else
+      _impl->lockCore1Watch.start();
 
    auto timeout = block ? portMAX_DELAY : pdMS_TO_TICKS(2);
    auto ret = xSemaphoreTake(_impl->xMutex, timeout) == pdTRUE;
@@ -109,14 +111,15 @@ bool FastLedController::lock(bool block)
       LOGLN("[FLED] mutex lock timeout.")
    }
 
-   if (!xPortGetCoreID()) _impl->lockCore0Watch.stop();
-   else _impl->lockCore1Watch.stop();
+   if (!xPortGetCoreID())
+      _impl->lockCore0Watch.stop();
+   else
+      _impl->lockCore1Watch.stop();
    return ret;
 #else
    return true;
 #endif
 }
-
 
 void FastLedController::unlock()
 {
@@ -160,7 +163,7 @@ void FastLedController::tick()
          }
       }
 
-            {
+      {
          auto runs = _impl->lockCore1Watch.runs();
          auto avg = _impl->lockCore1Watch.average();
          if (runs && avg)
@@ -191,11 +194,11 @@ void FastLedController::task()
    FastLED.show();
    auto lastshow = micros();
 
-   for(;;)
+   for (;;)
    {
       auto minMicros = 1000000 / _impl->maxFPS;
 
-      while(minMicros && ((micros()-lastshow) < minMicros))
+      while (minMicros && ((micros() - lastshow) < minMicros))
       {
          yield();
       }
