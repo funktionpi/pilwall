@@ -5,7 +5,8 @@
 #include "stopwatch.h"
 
 #define FASTLED_SHOW_CORE 0
-#define ENABLE_MUTEX 1
+#define ENABLE_MUTEX 0
+#define ENABLE_NOTIFICATION 0
 struct FastLedImpl
 {
    volatile int maxFPS;
@@ -17,8 +18,7 @@ struct FastLedImpl
    NeoPixelStrip frontbuffer;
 
    StopWatch drawWatch;
-   StopWatch lockCore0Watch;
-   StopWatch lockCore1Watch;
+   StopWatch lockCoreWatch[2];
 
    CLEDController *controllers[LED_CHANNEL_COUNT];
 };
@@ -32,11 +32,11 @@ void FastLEDshowTask(void *pvParameters)
 FastLedController::FastLedController()
     : _impl(new FastLedImpl())
 {
-   _impl->lockCore0Watch.reset();
-   _impl->lockCore1Watch.reset();
+   _impl->lockCoreWatch[0].reset();
+   _impl->lockCoreWatch[1].reset();
    _impl->drawWatch.reset();
    _impl->FastLEDshowTaskHandle = 0;
-   newLedsPtr(_impl->backbuffer);
+   newLedsPtr(_impl->frontbuffer.leds);
 }
 
 void FastLedController::setup()
@@ -65,18 +65,20 @@ void FastLedController::setup()
    {
       LOGLN("[FLED] init led frontbuffer #3");
       _impl->controllers[4] = &FastLED.addLeds<WS2812B, PIN_3, GRB>(_impl->frontbuffer, 3 * LED_CHANNEL_WIDTH, LED_CHANNEL_WIDTH);
+      _impl->controllers[4]->setTemperature(OvercastSky);
    }
-
    _impl->maxFPS = MAX_FPS;
-   // FastLED.setMaxRefreshRate(60, false);
-   FastLED.setCorrection(TypicalSMD5050);
-   // FastLED.setDither(BINARY_DITHER);
-   FastLED.clearData();
 
-   // set max power to X amps * 5v
+   // Note: these function seems to take too much cpu and add flickers into the rendering
+   FastLED.setCorrection(TypicalSMD5050);
+   // FastLED.setTemperature(Tungsten100W);
+   // FastLED.setDither(BINARY_DITHER);
    // FastLED.setMaxPowerInVoltsAndMilliamps(5, POWER_AMPS * 1000);
 
-   _impl->xMutex = xSemaphoreCreateMutex();
+   FastLED.clearData();
+
+   _impl->xMutex = xSemaphoreCreateBinary();
+   xSemaphoreGive(_impl->xMutex); // binary semaphore need to be given after creation
 
    auto pixsize = sizeof(CRGB);
    auto bufsize = pixsize * MATRIX_SIZE;
@@ -84,7 +86,7 @@ void FastLedController::setup()
    LOGF("[FLED] Memory size of pixel: %d bytes, Buffer size: %d bytes, Array size: %d\n", pixsize, bufsize, arraysize)
 
    // -- Create the FastLED show task
-   xTaskCreatePinnedToCore(FastLEDshowTask, "FastLEDshowTask", 2048, this, 1, &_impl->FastLEDshowTaskHandle, FASTLED_SHOW_CORE);
+   xTaskCreatePinnedToCore(FastLEDshowTask, "FastLEDshowTask", 2048, this, 100, &_impl->FastLEDshowTaskHandle, FASTLED_SHOW_CORE);
 
    LOGLN("[FLED] FastLED setup done")
 }
@@ -99,10 +101,7 @@ void FastLedController::setBrightness(int brightness)
 bool FastLedController::lock(bool block)
 {
 #if ENABLE_MUTEX
-   if (!xPortGetCoreID())
-      _impl->lockCore0Watch.start();
-   else
-      _impl->lockCore1Watch.start();
+   _impl->lockCoreWatch[xPortGetCoreID()].start();
 
    auto timeout = block ? portMAX_DELAY : pdMS_TO_TICKS(2);
    auto ret = xSemaphoreTake(_impl->xMutex, timeout) == pdTRUE;
@@ -111,10 +110,7 @@ bool FastLedController::lock(bool block)
       LOGLN("[FLED] mutex lock timeout.")
    }
 
-   if (!xPortGetCoreID())
-      _impl->lockCore0Watch.stop();
-   else
-      _impl->lockCore1Watch.stop();
+   _impl->lockCoreWatch[xPortGetCoreID()].stop();
    return ret;
 #else
    return true;
@@ -135,7 +131,7 @@ void FastLedController::copyRaw(int index, const uint8_t *src, int len)
 
 void FastLedController::drawPixel(int16_t x, int16_t y, CRGB color)
 {
-   _impl->backbuffer[mosaic.Map(x, y)] = color;
+   _impl->backbuffer[XY(x, y)] = color;
 }
 
 void FastLedController::tick()
@@ -152,37 +148,27 @@ void FastLedController::tick()
       {
          LOGLN("[FLED] ERROR: no draw was called (seems stuck)");
       }
-
-      {
-         auto runs = _impl->lockCore0Watch.runs();
-         auto avg = _impl->lockCore0Watch.average();
-         if (runs && avg)
-         {
-            LOGF("[FLED] Core0: mutex wait average: %d us (%d calls)\n", avg, runs);
-            _impl->lockCore0Watch.reset();
-         }
-      }
-
-      {
-         auto runs = _impl->lockCore1Watch.runs();
-         auto avg = _impl->lockCore1Watch.average();
-         if (runs && avg)
-         {
-            LOGF("[FLED] Core1: mutex wait average: %d us (%d calls)\n", avg, runs);
-            _impl->lockCore1Watch.reset();
-         }
-      }
-
       _impl->drawWatch.reset();
+
+      for(int i = 0; i < 2; ++i)
+      {
+         auto runs = _impl->lockCoreWatch[i].runs();
+         auto avg = _impl->lockCoreWatch[i].average();
+         auto time = _impl->lockCoreWatch[i].elapsedms();
+
+         if (runs && avg)
+         {
+            LOGF("[FLED] Core #%d: mutex wait, avg: %d us (%d calls), total: %d ms\n", i, avg, runs, time);
+            _impl->lockCoreWatch[i].reset();
+         }
+      }
    }
 #endif
 }
 
 void FastLedController::update()
 {
-   lock();
-   memcpy(_impl->frontbuffer.leds, _impl->backbuffer.leds, MATRIX_SIZE * sizeof(CRGB));
-   unlock();
+   xTaskNotifyGive(_impl->FastLEDshowTaskHandle);
 }
 
 void FastLedController::task()
@@ -202,12 +188,15 @@ void FastLedController::task()
       {
          yield();
       }
+      #if ENABLE_NOTIFICATION
+      // if (ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(1)) != pdTRUE)
+      {
+         memcpy(_impl->frontbuffer.leds, _impl->backbuffer.leds, MATRIX_SIZE * sizeof(CRGB));
+      }
       lastshow = micros();
 
-      lock();
       _impl->drawWatch.start();
       FastLED.show();
       _impl->drawWatch.stop();
-      unlock();
    }
 }

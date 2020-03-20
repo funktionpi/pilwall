@@ -13,7 +13,6 @@ public:
    virtual void setup() = 0;
    virtual void tick() = 0;
 
-   virtual int XY(int16_t x, int16_t y);
    virtual void drawPixel(int16_t x, int16_t y, CRGB color) = 0;
 
    virtual void setBrightness(int brightness) = 0;
@@ -25,18 +24,15 @@ public:
    virtual bool lock(bool block = true) = 0;
    virtual void unlock() = 0;
 
-   virtual uint16_t width();
-   virtual uint16_t height();
+   // virtual uint16_t width();
+   // virtual uint16_t height();
 
-   void fillScreen(uint32_t color)
+   void fillScreen(CRGB color)
    {
-      fillScreen(Framebuffer_GFX::Color24to16(color));
+      Framebuffer_GFX::fillScreen(Framebuffer_GFX::Color24to16(color));
    }
 
    void show() {}
-
-protected:
-   Mosaic mosaic;
 };
 
 LedController &LEDs();

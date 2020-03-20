@@ -38,7 +38,7 @@ CRGB bgCols[] = {CRGB::Red, CRGB::Black, CRGB::Green, CRGB::Black, CRGB::Blue, C
 
 void led_cycle_pixels()
 {
-   EVERY_N_MILLISECONDS(50)
+   EVERY_N_MILLISECONDS(1000 / 30)
    {
       controller.fillScreen(bgCols[col]);
 
@@ -48,11 +48,11 @@ void led_cycle_pixels()
 
       if (horizontal)
       {
-         controller.drawLine(it, 0, it, MATRIX_HEIGHT, LedController::Color24to16(CRGB::White));
+         controller.drawFastVLine(it, 0, MATRIX_HEIGHT, LedController::Color24to16(CRGB::White));
       }
       else
       {
-         controller.drawLine(0, it, MATRIX_WIDTH, it, LedController::Color24to16(CRGB::White));
+         controller.drawFastHLine(0, it, MATRIX_WIDTH, LedController::Color24to16(CRGB::White));
       }
 
       it++;
@@ -75,14 +75,14 @@ void led_flash_colors()
    {
       auto color = bgCols[col];
 
-      controller.Clear(colorToInt(color));
+      controller.fillScreen(color);
 
       // controller.DrawLine(0, 0, MATRIX_WIDTH, 0, bgCols[col]);
       // controller.DrawLine(0, 1, MATRIX_WIDTH, 1, bgCols[col]);
 
       col = (col + 1) % (sizeof(bgCols) / sizeof(CRGB));
 
-      controller.Update();
+      controller.update();
    }
 }
 
