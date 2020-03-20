@@ -48,15 +48,15 @@ void process_message(const uint8_t *data, size_t len, piproto_Response &response
    {
       LOGLN("[PB] received a dimension request");
       response.which_response = piproto_Response_dimension_tag;
-      response.response.dimension.width = LEDs().Width();
-      response.response.dimension.height = LEDs().Height();
+      response.response.dimension.width = LEDs().width();
+      response.response.dimension.height = LEDs().height();
       break;
    }
    case piproto_Request_raw_tag:
    {
       auto count = msg.request.raw.pixels_count * 4 / 3;
       DLOGF("[PB] received a raw pixel request, index: %d, count: %d\n", msg.request.raw.index, count);
-      LEDs().CopyRaw(msg.request.raw.index, (uint8_t *)msg.request.raw.pixels, count);
+      LEDs().copyRaw(msg.request.raw.index, (uint8_t *)msg.request.raw.pixels, count);
       break;
    }
    case piproto_Request_clear_tag:
@@ -65,7 +65,7 @@ void process_message(const uint8_t *data, size_t len, piproto_Response &response
       auto color = CRGB(msg.request.clear.color);
       DLOGF("[PB] Clear color to (r: %d, g: %d, b: %d)\n", color.red, color.green, color.blue);
 
-      LEDs().Clear(color);
+      LEDs().fillScreen(LedController::Color24to16(color));
       break;
    }
    case piproto_Request_pixels_tag:
@@ -77,7 +77,7 @@ void process_message(const uint8_t *data, size_t len, piproto_Response &response
          auto x = (pixel.coord.xy & 0xFFFF0000) >> 16;
          auto y = (pixel.coord.xy & 0x0000FFFF);
          auto color = fromProtoColor(pixel.color);
-         LEDs().SetPixel(x, y, color);
+         LEDs().drawPixel(x, y, color);
       }
       break;
    }
@@ -92,7 +92,7 @@ void process_message(const uint8_t *data, size_t len, piproto_Response &response
 
       auto color = (msg.request.draw_line.color);
 
-      LEDs().DrawLine(x1, y1, x2, y2, color);
+      LEDs().drawLine(x1, y1, x2, y2, color);
       break;
    }
    case piproto_Request_brightness_tag:
@@ -109,13 +109,13 @@ void process_message(const uint8_t *data, size_t len, piproto_Response &response
          val = 0;
       }
 
-      LEDs().SetBrightness(val);
+      LEDs().setBrightness(val);
       break;
    }
    case piproto_Request_update_tag:
    {
       DLOGLN("[PB] received an update request");
-      LEDs().Update();
+      LEDs().update();
       break;
    }
    }

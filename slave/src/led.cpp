@@ -2,20 +2,26 @@
 #include "led_controller.h"
 #include "log.h"
 
-// #include <NeoPixelBus.h>
-// #include <NeoPixelBrightnessBus.h>
+// Change this between FastLedController or NeoPixelBusController to change implementation
+#if USE_FASTLED
+#include "fastled_ctrl.h"
+FastLedController controller;
+#endif
 
-DefaultLedLibrary controller;
+#if USE_NEOPIXELBUS
+#include "neopixelbus_ctrl.h"
+NeoPixelBusController controller;
+#endif
 
 void setup_led()
 {
    LOGF("[LED] Matrix Size: %dx%d\n", MATRIX_WIDTH, MATRIX_HEIGHT);
    LOGF("[LED] Using %d channels with %d pixels for a total of %d pixels\n", LED_CHANNEL_COUNT, LED_CHANNEL_WIDTH, MATRIX_SIZE);
 
-   controller.Setup();
-   // controller.SetBrightness(8);
-   controller.Clear(0);
-   controller.Update();
+   controller.setup();
+   // controller.SetBrightness(DEFAULT_BRIGHTNESS);
+   controller.clear();
+   controller.update();
 
    LOGLN("[LED] setup done");
 }
@@ -34,7 +40,7 @@ void led_cycle_pixels()
 {
    EVERY_N_MILLISECONDS(50)
    {
-      controller.Clear(colorToInt(bgCols[col]));
+      controller.fillScreen(bgCols[col]);
 
       auto count = horizontal ? MATRIX_WIDTH : MATRIX_HEIGHT;
 
@@ -42,11 +48,11 @@ void led_cycle_pixels()
 
       if (horizontal)
       {
-         controller.DrawLine(it, 0, it, MATRIX_HEIGHT, CRGB::White);
+         controller.drawLine(it, 0, it, MATRIX_HEIGHT, LedController::Color24to16(CRGB::White));
       }
       else
       {
-         controller.DrawLine(0, it, MATRIX_WIDTH, it, CRGB::White);
+         controller.drawLine(0, it, MATRIX_WIDTH, it, LedController::Color24to16(CRGB::White));
       }
 
       it++;
@@ -59,7 +65,7 @@ void led_cycle_pixels()
          col = (col + 1) % (sizeof(bgCols) / sizeof(CRGB));
          // LOGF("[LED] now clearing to (R: %d, G: %d, B: %d)\n", bgCols[col].r, bgCols[col].g, bgCols[col].b);
       }
-      controller.Update();
+      controller.update();
    }
 }
 
@@ -84,5 +90,5 @@ void tick_led()
 {
    // led_cycle_pixels();
    // led_flash_colors();
-   controller.Tick();
+   controller.tick();
 }

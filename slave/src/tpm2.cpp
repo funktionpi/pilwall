@@ -72,9 +72,8 @@ void on_tpm2_packet(const uint8_t *data, int length, WiFiUDP *svr)
    {
    case packet_type_cmd:
    {
-      auto color = CRGB(packet->data[1], packet->data[2], packet->data[3]);
       DLOGF("[TPM2] clear color command: (r: %d, g: %d, b: %d)\n", color.r, color.g, color.b);
-      LEDs().Clear(color);
+      LEDs().fillScreen(LedController::Color(packet->data[1], packet->data[2], packet->data[3]));
       break;
    }
 
@@ -85,8 +84,8 @@ void on_tpm2_packet(const uint8_t *data, int length, WiFiUDP *svr)
       auto index = ledPerPacket * (packet->packet_index - 1); // packet are one based
 
       DLOGF("[TPM2] received data for pixels %d to %d\n", index, index + ledCount);
-      LEDs().CopyRaw(index, packet->data, ledCount);
-      LEDs().Update();
+      LEDs().copyRaw(index, packet->data, ledCount);
+      LEDs().update();
       break;
    }
 
@@ -97,7 +96,7 @@ void on_tpm2_packet(const uint8_t *data, int length, WiFiUDP *svr)
       svr->write(&packet_response_ack, 1);
       svr->endPacket();
 
-      LEDs().Update();
+      LEDs().update();
       break;
    }
 

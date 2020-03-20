@@ -57,5 +57,6 @@
     "files.exclude": {
         ".pio/build": true
     },
-    "workbench.editor.openPositioning": "last"
+    "workbench.editor.openPositioning": "last",
+    "python.pythonPath": "C:\\ProgramData\\scoop\\apps\\python\\current\\python.exe"
 }

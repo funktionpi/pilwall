@@ -57,8 +57,8 @@ class StopWatch
       }
 
    private:
-      uint32_t _start;
-      uint32_t _elapsed;
-      uint8_t _runs;
+      volatile uint32_t _start;
+      volatile uint32_t _elapsed;
+      volatile uint8_t _runs;
       bool _running;
 };

@@ -62,8 +62,8 @@ void tick_e131()
       auto ledCount = data_length / 3;
       auto index = (universe - startUniverse) * ledsPerUniverse;
       DLOGF("[e131] received data for pixels %d to %d\n", index, index + ledCount);
-      LEDs().CopyRaw(index, packet.property_values, ledCount);
-      LEDs().Update();
+      LEDs().copyRaw(index, packet.property_values, ledCount);
+      LEDs().update();
 
       sw.stop();
    }

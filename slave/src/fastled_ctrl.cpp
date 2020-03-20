@@ -1,12 +1,11 @@
-#include "led.h"
-#include "led_controller.h"
+#include <pixelset.h>
+
+#include "fastled_ctrl.h"
 #include "log.h"
 #include "stopwatch.h"
 
 #define FASTLED_SHOW_CORE 0
-
-typedef CRGBArray<MATRIX_SIZE> NeoPixelStrip;
-
+#define ENABLE_MUTEX 1
 struct FastLedImpl
 {
    volatile int maxFPS;
@@ -18,7 +17,8 @@ struct FastLedImpl
    NeoPixelStrip frontbuffer;
 
    StopWatch drawWatch;
-   StopWatch lockWatch;
+   StopWatch lockCore0Watch;
+   StopWatch lockCore1Watch;
 
    CLEDController *controllers[LED_CHANNEL_COUNT];
 };
@@ -26,17 +26,20 @@ struct FastLedImpl
 void FastLEDshowTask(void *pvParameters)
 {
    auto ctrl = (FastLedController *)pvParameters;
-   ctrl->Task();
+   ctrl->task();
 }
 
 FastLedController::FastLedController()
     : _impl(new FastLedImpl())
 {
+   _impl->lockCore0Watch.reset();
+   _impl->lockCore1Watch.reset();
    _impl->drawWatch.reset();
    _impl->FastLEDshowTaskHandle = 0;
+   newLedsPtr(_impl->backbuffer);
 }
 
-void FastLedController::Setup()
+void FastLedController::setup()
 {
    LOGLN("[FLED] init FastLED library");
 
@@ -57,7 +60,6 @@ void FastLedController::Setup()
    {
       LOGLN("[FLED] init led frontbuffer #2");
       _impl->controllers[3] = &FastLED.addLeds<WS2812B, PIN_2, GRB>(_impl->frontbuffer, 2 * LED_CHANNEL_WIDTH, LED_CHANNEL_WIDTH);
-      // _impl->controllers[3]->setTemperature(MercuryVapor);
    }
    if (LED_CHANNEL_COUNT > 3)
    {
@@ -65,9 +67,9 @@ void FastLedController::Setup()
       _impl->controllers[4] = &FastLED.addLeds<WS2812B, PIN_3, GRB>(_impl->frontbuffer, 3 * LED_CHANNEL_WIDTH, LED_CHANNEL_WIDTH);
    }
 
-   _impl->maxFPS = 60;
+   _impl->maxFPS = MAX_FPS;
    // FastLED.setMaxRefreshRate(60, false);
-   // FastLED.setCorrection(TypicalSMD5050);
+   FastLED.setCorrection(TypicalSMD5050);
    // FastLED.setDither(BINARY_DITHER);
    FastLED.clearData();
 
@@ -87,48 +89,53 @@ void FastLedController::Setup()
    LOGLN("[FLED] FastLED setup done")
 }
 
-void FastLedController::SetBrightness(int brightness)
+void FastLedController::setBrightness(int brightness)
 {
+   lock(true);
    FastLED.setBrightness(brightness);
-   // LOGF("[FLED] brightness set to %d\n", brightness);
+   unlock();
 }
 
-bool FastLedController::Lock(bool block = true)
+bool FastLedController::lock(bool block)
 {
-   _impl->lockWatch.start();
-   auto timeout = block ? portMAX_DELAY : pdMS_TO_TICKS(10);
+#if ENABLE_MUTEX
+   if (!xPortGetCoreID()) _impl->lockCore0Watch.start();
+   else _impl->lockCore1Watch.start();
+
+   auto timeout = block ? portMAX_DELAY : pdMS_TO_TICKS(2);
    auto ret = xSemaphoreTake(_impl->xMutex, timeout) == pdTRUE;
    if (!ret)
    {
       LOGLN("[FLED] mutex lock timeout.")
    }
-   _impl->lockWatch.stop();
+
+   if (!xPortGetCoreID()) _impl->lockCore0Watch.stop();
+   else _impl->lockCore1Watch.stop();
    return ret;
+#else
+   return true;
+#endif
 }
 
-void FastLedController::Unlock()
+
+void FastLedController::unlock()
 {
+#if ENABLE_MUTEX
    xSemaphoreGive(_impl->xMutex);
+#endif
 }
 
-void FastLedController::CopyRaw(int index, const uint8_t *src, int len)
+void FastLedController::copyRaw(int index, const uint8_t *src, int len)
 {
    memcpy(_impl->backbuffer.leds + index, src, len * sizeof(CRGB));
 }
 
-void FastLedController::Clear(CRGB color)
-{
-   _impl->backbuffer.fill_solid(CRGB(color));
-}
-
-void FastLedController::SetPixel(uint16_t x, uint16_t y, CRGB color)
+void FastLedController::drawPixel(int16_t x, int16_t y, CRGB color)
 {
    _impl->backbuffer[mosaic.Map(x, y)] = color;
 }
 
-volatile int tst;
-
-void FastLedController::Tick()
+void FastLedController::tick()
 {
 #ifdef SERIAL_DEBUG
    EVERY_N_SECONDS(5)
@@ -144,12 +151,22 @@ void FastLedController::Tick()
       }
 
       {
-         auto runs = _impl->lockWatch.runs();
-         auto avg = _impl->lockWatch.average();
+         auto runs = _impl->lockCore0Watch.runs();
+         auto avg = _impl->lockCore0Watch.average();
          if (runs && avg)
          {
-            LOGF("[FLED] mutex wait average: %d us (%d calls)\n", avg, runs);
-            _impl->lockWatch.reset();
+            LOGF("[FLED] Core0: mutex wait average: %d us (%d calls)\n", avg, runs);
+            _impl->lockCore0Watch.reset();
+         }
+      }
+
+            {
+         auto runs = _impl->lockCore1Watch.runs();
+         auto avg = _impl->lockCore1Watch.average();
+         if (runs && avg)
+         {
+            LOGF("[FLED] Core1: mutex wait average: %d us (%d calls)\n", avg, runs);
+            _impl->lockCore1Watch.reset();
          }
       }
 
@@ -158,14 +175,14 @@ void FastLedController::Tick()
 #endif
 }
 
-void FastLedController::Update()
+void FastLedController::update()
 {
-   Lock();
+   lock();
    memcpy(_impl->frontbuffer.leds, _impl->backbuffer.leds, MATRIX_SIZE * sizeof(CRGB));
-   Unlock();
+   unlock();
 }
 
-void FastLedController::Task()
+void FastLedController::task()
 {
    delay(250); // wait a little before starting to draw
 
@@ -184,10 +201,10 @@ void FastLedController::Task()
       }
       lastshow = micros();
 
-      Lock(true);
+      lock();
       _impl->drawWatch.start();
       FastLED.show();
       _impl->drawWatch.stop();
-      Unlock();
+      unlock();
    }
 }

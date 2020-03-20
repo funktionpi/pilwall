@@ -93,7 +93,7 @@ func (c *Proto) SetBrightness(brightness uint8) error {
 
 func (c *Proto) Clear(color color.Color) error {
 	val := convertColor(color)
-	fmt.Printf("Clear color: %v\n", color.RGB())
+	//fmt.Printf("Clear color: %v\n", color.RGB())
 
 	req := pi_proto.Request_Clear{&pi_proto.ClearRequest{
 		Color: val,

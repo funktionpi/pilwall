@@ -1,7 +1,11 @@
 #include "led_controller.h"
-#include "log.h"
+
+#if USE_NEOPIXELBUS
 
 #include <NeoPixelBrightnessBus.h>
+
+#include "log.h"
+#include "neopixelbus.h"
 
 #define NEOPIXEL_SHOW_CORE 0
 
@@ -30,7 +34,7 @@ NeoPixelBusController::NeoPixelBusController()
    memset(_impl, 0, sizeof(NeoPixelBusImpl)); // init to zero
 }
 
-void NeoPixelBusController::Setup()
+void NeoPixelBusController::setup()
 {
    LOGLN("[LED] init NeoPixelBus library");
 
@@ -60,7 +64,7 @@ void NeoPixelBusController::Setup()
    LOGLN("[LED] NeoPixel setup done")
 }
 
-void NeoPixelBusController::Update()
+void NeoPixelBusController::update()
 {
    _impl->strip0->Show();
    if (_impl->strip1) _impl->strip1->Show();
@@ -68,7 +72,7 @@ void NeoPixelBusController::Update()
    if (_impl->strip3) _impl->strip3->Show();
 }
 
-void NeoPixelBusController::Tick()
+void NeoPixelBusController::tick()
 {
    // TODO
 }
@@ -88,7 +92,7 @@ RgbColor adjustColor(int brightness, CRGB _color)
    return out;
 }
 
-void NeoPixelBusController::SetPixel(uint16_t x, uint16_t y, CRGB _color)
+void NeoPixelBusController::drawPixel(uint16_t x, uint16_t y, CRGB _color)
 {
    auto color = adjustColor(_impl->strip0->GetBrightness(), _color);
    auto idx = mosaic.Map(x, y);
@@ -101,12 +105,12 @@ void NeoPixelBusController::SetPixel(uint16_t x, uint16_t y, CRGB _color)
    else if (stripId == 3) _impl->strip3->SetPixelColor(idx, color);
 }
 
-void NeoPixelBusController::CopyRaw(int index, const uint8_t *src, int len)
+void NeoPixelBusController::copyRaw(int index, const uint8_t *src, int len)
 {
 
 }
 
-void NeoPixelBusController::Clear(CRGB _color)
+void NeoPixelBusController::clear(CRGB _color)
 {
    auto color = adjustColor(_impl->strip0->GetBrightness(), _color);
    _impl->strip0->ClearTo(color);
@@ -118,18 +122,18 @@ void NeoPixelBusController::Clear(CRGB _color)
       _impl->strip3->ClearTo(color);
 }
 
-bool NeoPixelBusController::Lock(bool wait = false)
+bool NeoPixelBusController::lock(bool wait = false)
 {
    auto timeout = wait ? portMAX_DELAY : pdMS_TO_TICKS(10);
    return xSemaphoreTake(_impl->xMutex, timeout) == pdTRUE;
 }
 
-void NeoPixelBusController::Unlock()
+void NeoPixelBusController::unlock()
 {
    xSemaphoreGive(_impl->xMutex);
 }
 
-void NeoPixelBusController::SetBrightness(int brightness)
+void NeoPixelBusController::setBrightness(int brightness)
 {
    _impl->strip0->SetBrightness(brightness);
    if (_impl->strip1) _impl->strip1->SetBrightness(brightness);
@@ -146,3 +150,5 @@ void NeoPixelshowTask(void *pvParameters)
    auto ctrl = (NeoPixelBusController *)pvParameters;
    ctrl->LoopTask();
 }
+
+#endif

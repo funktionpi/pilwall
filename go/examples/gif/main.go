@@ -51,7 +51,8 @@ func main() {
 
 	fmt.Printf("screen dimension is %dx%d\n", mosaic.Width(), mosaic.Height())
 
-	playGif(client, mosaic)
+	//playGif(client, mosaic)
+	scrobe(client, mosaic)
 	//WaitForCtrlC()
 }
 
@@ -117,8 +118,8 @@ func playGif(client pileds.Client, mosaic layout.Mosaic) {
 	for {
 		for i, gifImg := range anim.Image {
 
-			//err = client.SetBrightness(8)
-			//errors.ExitIfErr(err)
+			err = client.SetBrightness(8)
+			errors.ExitIfErr(err)
 
 			//println("color model:", reflect.TypeOf(gifImg.ColorModel()).Name())
 
@@ -128,7 +129,7 @@ func playGif(client pileds.Client, mosaic layout.Mosaic) {
 			delay := anim.Delay[i]
 			proto.Int(delay)
 			//ch := time.After(time.Duration(delay) * time.Second / 100)
-			ch := time.After(time.Second / 120)
+			ch := time.After(time.Second / 60)
 
 			err = client.DrawImg(ctx.Image())
 			//err = client.DrawImgRaw(ctx.Image(), mosaic)
@@ -142,20 +143,32 @@ func playGif(client pileds.Client, mosaic layout.Mosaic) {
 	}
 }
 
-func scrobe(client pileds.Client) {
+func scrobe(client pileds.Client, mosaic layout.Mosaic) {
 	colors := []color.Color{color.Black, color.White, color.Black, color.Red, color.Black, color.Blue, color.Black, color.Green}
+
+	w := int(mosaic.Width())
+	h := int(mosaic.Height())
+	ctx := gg.NewContext(w, h)
+
+	var err error
 
 	idx := 0
 	for {
 		idx = (idx + 1) % len(colors)
 
-		err := client.Clear(colors[idx])
+		ctx.SetColor(colors[idx])
+		ctx.Clear()
+
+		//err = client.Clear(colors[idx])
+		//errors.PrintIfErr(err)
+
+		err = client.DrawImg(ctx.Image())
 		errors.PrintIfErr(err)
 
 		err = client.UpdateScreen()
 		errors.PrintIfErr(err)
 
-		//time.Sleep(time.Millisecond * 17)
+		time.Sleep(time.Second / 60)
 	}
 }
 

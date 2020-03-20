@@ -1,9 +1,7 @@
 #pragma once
 
-#include <NeoPixelBus.h>
-
-#define HOSTNAME "ledwall-64x16"
-#define BONJOUR_NAME "ledwall-64x16"
+#define HOSTNAME "pilwall-64x16"
+#define BONJOUR_NAME "pilwall-64x16"
 
 #ifndef RELEASE
 #define SERIAL_DEBUG
@@ -23,12 +21,14 @@
 #define TPM2_OUT_PORT 65442
 
 #define ENABLE_ARTNET 1
-#define ENABLE_E131 1
+#define ENABLE_E131 0
 #define ENABLE_PROTO 1
 #define ENABLE_OPC 0
 #define ENABLE_TPM2 1
 
 #define OPC_MAX_CLIENTS 1
+
+#define MAX_FPS 60
 
 #define PIN_0 4
 #define PIN_1 19
@@ -57,12 +57,25 @@ const int PINS[] = {PIN_0, PIN_1, PIN_2, PIN_3};
 
 #define MAX_UDP_PACKET_SIZE 1460
 
+// Various options for FASTLED library
+// #define FASTLED_RMT_MAX_CHANNELS 4
+// #define FASTLED_RMT_BUILTIN_DRIVER 1
+// #define FASTLED_RMT_BUILTIN_DRIVER 1
+// #define FASTLED_INTERRUPT_RETRY_COUNT 1
+// #define FASTLED_ALLOW_INTERRUPTS 0
+// #define FASTLED_ESP32_FLASH_LOCK 1
+#define FASTLED_ESP32_I2S 1
+
+#include <NeoPixelBus.h>
 typedef NeoTiles<ColumnMajorAlternatingLayout , RowMajorLayout> Mosaic;
 
-class FastLedController;
-class NeoPixelBusController;
+#define USE_FASTLED 1
+#define USE_NEOPIXELBUS 0
 
-// Change this between FastLedController or NeoPixelBusController to change implementation
-typedef FastLedController DefaultLedLibrary;
+#if USE_FASTLED
+#if USE_NEOPIXELBUS
+#pragma error "cannot use both fastled and neopixel bus"
+#endif
+#endif
 
 const int LED_CHANNEL_WIDTH = MATRIX_SIZE / LED_CHANNEL_COUNT;

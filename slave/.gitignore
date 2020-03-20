@@ -3,5 +3,9 @@
 .vscode/launch.json
 .vscode/ipch
 .pio
+.idea/
 
 stacktrace.cmd
+cmake-*
+CMakeLists.txt
+CMakeListsPrivate.txt

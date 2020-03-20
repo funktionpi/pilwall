@@ -46,8 +46,8 @@ void onDmxFrame(uint8_t universe, uint8_t *data, uint16_t length)
       ledCount = ledsPerUniverse;
    }
    DLOGF("[ARTNET] writing to index %d, led count : %d\n", index, ledCount);
-   LEDs().CopyRaw(index, data, ledCount);
-   LEDs().Update();
+   LEDs().copyRaw(index, data, ledCount);
+   LEDs().update();
 
    artnet_sw.stop();
 }
