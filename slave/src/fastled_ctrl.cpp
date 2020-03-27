@@ -168,7 +168,9 @@ void FastLedController::tick()
 
 void FastLedController::update()
 {
+#if ENABLE_NOTIFICATION
    xTaskNotifyGive(_impl->FastLEDshowTaskHandle);
+#endif
 }
 
 void FastLedController::task()
@@ -188,8 +190,9 @@ void FastLedController::task()
       {
          yield();
       }
-      #if ENABLE_NOTIFICATION
-      // if (ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(1)) != pdTRUE)
+#if ENABLE_NOTIFICATION
+      if (ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(1)) != pdTRUE)
+#endif
       {
          memcpy(_impl->frontbuffer.leds, _impl->backbuffer.leds, MATRIX_SIZE * sizeof(CRGB));
       }
